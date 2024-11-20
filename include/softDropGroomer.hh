@@ -40,6 +40,8 @@ private :
   std::vector<fastjet::PseudoJet> fjInputs_;   //ungroomed jets
   std::vector<fastjet::PseudoJet> fjOutputs_;  //groomed jets
   std::vector<double>             zg_;         //zg of groomed jets
+  std::vector<double>             erad_;       //erad= sj1.e()+sj2.e() (It is the sum of the energie of the two branches)
+  std::vector<double>             product_; // product = sj1.e()*sj2.e() (It isthe product of the two branches)
   std::vector<int>                drBranches_; //dropped branches
   std::vector<double>             dr12_;       //distance between the two subjets
   std::vector<double>             sjmass_;       //subleading subjet mass
@@ -67,6 +69,8 @@ public :
 
   std::vector<fastjet::PseudoJet> getGroomedJets() const;
   std::vector<double> getZgs() const;
+  std::vector<double> getProducts() const;
+  std::vector<double> getErads() const;
   std::vector<int>    getNDroppedSubjets() const;
   std::vector<double> getDR12() const;
   std::vector<double> getSubJetMass() const;
@@ -145,6 +149,16 @@ std::vector<double> softDropGroomer::getZgs() const
    return zg_;
 }
 
+std::vector<double> softDropGroomer::getErads() const
+{
+   return erad_;
+}
+
+std::vector<double> softDropGroomer::getProducts() const
+{
+   return product_;
+}
+
 std::vector<int> softDropGroomer::getNDroppedSubjets() const
 {
    return drBranches_;
@@ -219,6 +233,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
 {
    fjOutputs_.reserve(fjInputs_.size());
    zg_.reserve(fjInputs_.size());
+   erad_.reserve(fjInputs_.size());
+   product_.reserve(fjInputs_.size());
    drBranches_.reserve(fjInputs_.size());
    dr12_.reserve(fjInputs_.size());
    sjmass_.reserve(fjInputs_.size());
@@ -236,6 +252,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
      if(!jet.has_constituents()) {
        fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
        zg_.push_back(-1.);
+       erad_.push_back(-1.);
+       product_.push_back(-1.);
        drBranches_.push_back(-1.);
        dr12_.push_back(-1.);
        sjmass_.push_back(-1.);
@@ -262,6 +280,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
       if(tempJets.size()<1) {
          fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
          zg_.push_back(-1.);
+         erad_.push_back(-1);
+         product_.push_back(-1);
          drBranches_.push_back(-1.);
          dr12_.push_back(-1.);
          sjmass_.push_back(-1.);
@@ -292,6 +312,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
       if ( transformedJet == 0 ) {
          fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
          zg_.push_back(-1.);
+         erad_.push_back(-1.);
+         product_.push_back(-1.);
          drBranches_.push_back(0.);
          dr12_.push_back(0.);
          sjmass_.push_back(0.);
@@ -317,8 +339,12 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGrooming()
       constituents_.push_back(transformedJet.constituents());
       //std::cout << "calc zg" << std::endl;
       double zg = transformedJet.structure_of<fastjet::contrib::SoftDrop>().symmetry();
+      double erad = j1.e() + j2.e();
+      double product = j1.e() * j2.e();
       int ndrop = transformedJet.structure_of<fastjet::contrib::SoftDrop>().dropped_count();
       zg_.push_back(zg);
+      erad_.push_back(erad);
+      product_.push_back(product);
       drBranches_.push_back(ndrop);
       //std::cout << "calc Rg" << std::endl;
       //get distance between the two subjets
@@ -379,6 +405,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
 {
    fjOutputs_.reserve(fjInputs_.size());
    zg_.reserve(fjInputs_.size());
+   erad_.reserve(fjInputs_.size());
+   product_.reserve(fjInputs_.size());
    drBranches_.reserve(fjInputs_.size());
    dr12_.reserve(fjInputs_.size());
    sjmass_.reserve(fjInputs_.size());
@@ -409,6 +437,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
       if(tempJets.size()<1) {
          fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
          zg_.push_back(-1.);
+         erad_.push_back(-1.);
+         product_.push_back(-1.);
          drBranches_.push_back(-1.);
          dr12_.push_back(-1.);
          sjmass_.push_back(-1.);
@@ -424,6 +454,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
       fastjet::PseudoJet Part1, Part2;
       fastjet::PseudoJet sj1, sj2;
       double zg = -1.;
+      double erad = -1.;
+      double product = -1.;
       int ndrop = 0;
 
       // std::cout << "start grooming procedure" << std::endl;
@@ -432,6 +464,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
         if (CurrentJet.pt2() <= 0) break;
         
         zg = -1.;
+        erad= -1.;
+        product = -1.;
 
         double deltaRsq = Part1.squared_distance(Part2);
         double cut = zcut_ * std::pow(deltaRsq / r0_/r0_, 0.5*beta_);
@@ -448,6 +482,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
           else
             CurrentJet = Part2;
           zg = -1.;
+          erad = -1.;
+          product = -1.;
           ++ndrop;
         } else {
           break;
@@ -462,6 +498,8 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
       if ( transformedJet == 0 ) {
          fjOutputs_.push_back(fastjet::PseudoJet(0.,0.,0.,0.));
          zg_.push_back(-1.);
+         erad_.push_back(-1.);
+         product_.push_back(-1.);
          drBranches_.push_back(-1.);
          dr12_.push_back(-1.);
          sjmass_.push_back(-1.);
@@ -480,6 +518,9 @@ std::vector<fastjet::PseudoJet> softDropGroomer::doGroomingWithJewelSub(std::vec
         
         fjOutputs_.push_back( transformedJet ); //put CA reclusterd jet after softDrop into vector
         zg_.push_back(zg);
+        erad_.push_back(erad);
+        product_.push_back(product);
+        //fill erad
         dr12_.push_back(deltaR);
         drBranches_.push_back(ndrop);
 

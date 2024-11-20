@@ -38,6 +38,8 @@ private :
   std::vector<std::vector<double>> drs_;         // and the angles in the algorithm
   std::vector<std::vector<double>> pts_;         // pts of each node
   std::vector<std::vector<double>> erads_;       // energy of sum of the two branches at each node
+  std::vector<std::vector<double>> mpts_;         // tranverse momentum: sum of the two branches at each node
+  std::vector<std::vector<double>> products_;    // product = sj1.p()*sj2.p() (It isthe product of the two branches)
   std::vector<std::vector<double>> log1drs_;     // Log(1/angle) in the algorithm
   std::vector<std::vector<double>> logzdrs_;     // Log(z*angle) in the algorithm
   std::vector<std::vector<double>> tfs_;         // formation time tf = 2 / (z*(1-z)*pt*theta^2)
@@ -61,6 +63,8 @@ public :
   std::vector<std::vector<double>> getDRs() const { return drs_; }
   std::vector<std::vector<double>> getPts() const { return pts_; }
   std::vector<std::vector<double>> getErads() const { return erads_; }
+  std::vector<std::vector<double>> getMpts() const { return erads_; }
+  std::vector<std::vector<double>> getProducts() const { return products_; }
   std::vector<std::vector<double>> getLog1DRs() const { return log1drs_; }
   std::vector<std::vector<double>> getLogzDRs() const { return logzdrs_; }
   std::vector<std::vector<double>> getTfs() const { return tfs_; }
@@ -142,6 +146,8 @@ void softDropCounter::run()
          drs_.push_back(vector<double>());
          pts_.push_back(vector<double>());
          erads_.push_back(vector<double>());
+         mpts_.push_back(vector<double>());
+         products_.push_back(vector<double>());
          log1drs_.push_back(vector<double>());
          logzdrs_.push_back(vector<double>());
          tfs_.push_back(vector<double>());
@@ -186,6 +192,8 @@ void softDropCounter::run()
          drs_.push_back(vector<double>());
          pts_.push_back(vector<double>());
          erads_.push_back(vector<double>());
+         mpts_.push_back(vector<double>());
+         products_.push_back(vector<double>());
          log1drs_.push_back(vector<double>());
          logzdrs_.push_back(vector<double>());
          tfs_.push_back(vector<double>());
@@ -201,6 +209,8 @@ void softDropCounter::run()
       std::vector<double> dr;
       std::vector<double> pt;
       std::vector<double> erad;
+      std::vector<double> mpt;
+      std::vector<double> product;
       std::vector<double> log1dr;
       std::vector<double> logzdr;
       std::vector<double> tf;
@@ -246,6 +256,8 @@ void softDropCounter::run()
             dr.push_back(DeltaR);
             pt.push_back(CurrentJet.perp());
             erad.push_back(sj1.e()+sj2.e());
+            mpt.push_back(sj1.pt()+sj2.pt());
+            product.push_back(sj1.pt()*sj2.pt());
             log1dr.push_back(log(1./DeltaR));
             logzdr.push_back(log(zg*DeltaR));
             tf.push_back(2./(zg*(1.-zg)*CurrentJet.perp()*GeVtofm*DeltaR*DeltaR/r0_/r0_));
@@ -263,6 +275,8 @@ void softDropCounter::run()
       drs_.push_back(dr);
       pts_.push_back(pt);
       erads_.push_back(erad);
+      mpts_.push_back(mpt);
+      products_.push_back(product);
       log1drs_.push_back(log1dr);
       logzdrs_.push_back(logzdr);
       tfs_.push_back(tf);

@@ -141,12 +141,15 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
   //we are storing the pt, eta, phi and mass of the jets
   std::vector<double> pt;    pt.reserve(v.size());
   std::vector<double> eta;   eta.reserve(v.size());
+  std::vector<double> e;    e.reserve(v.size());
   std::vector<double> phi;   phi.reserve(v.size());
   std::vector<double> m;     m.reserve(v.size());
   std::vector<double> area;  area.reserve(v.size());
+  
 
   std::vector<std::vector<double>> constPt;
   std::vector<std::vector<double>> constEta;
+  std::vector<std::vector<double>> constE;
   std::vector<std::vector<double>> constPhi;
   std::vector<std::vector<double>> constM;
   //if(writeConst) {
@@ -156,6 +159,7 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
   for(const fastjet::PseudoJet &jet : v) {
     pt.push_back(jet.pt());
     eta.push_back(jet.eta());
+    e.push_back(jet.e());
     phi.push_back(jet.phi());
     m.push_back(jet.m());
     if(jet.has_area()) area.push_back(jet.area());
@@ -165,19 +169,23 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
       //get constituents of jet
       std::vector<double> ptConst;
       std::vector<double> etaConst;
+      std::vector<double> eConst;
       std::vector<double> phiConst;
       std::vector<double> mConst;
+
       
       std::vector<fastjet::PseudoJet> particles, ghosts;
       fastjet::SelectorIsPureGhost().sift(jet.constituents(), ghosts, particles);
       for(const fastjet::PseudoJet& p : particles) {
         ptConst.push_back(p.pt());
         etaConst.push_back(p.eta());
+        eConst.push_back(p.e());
         phiConst.push_back(p.phi());
         mConst.push_back(p.m());
       }
       constPt.push_back(ptConst);
       constEta.push_back(etaConst);
+      constE.push_back(eConst);
       constPhi.push_back(phiConst);
       constM.push_back(mConst);
     }
@@ -185,6 +193,7 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
 
   addDoubleCollection(name + "Pt",  pt);
   addDoubleCollection(name + "Eta", eta);
+  addDoubleCollection(name + "E", e);
   addDoubleCollection(name + "Phi", phi);
   addDoubleCollection(name + "M",   m);
   addDoubleCollection(name + "Area",   area);
@@ -198,6 +207,11 @@ void treeWriter::addJetCollection(std::string name, const std::vector<fastjet::P
     
     branchName = name + "ConstEta";
     doubleVectorMaps_[branchName] = constEta;
+    if(!treeOut_->GetBranch(branchName.c_str()))
+      treeOut_->Branch(branchName.c_str(),&doubleVectorMaps_[branchName]);
+
+    branchName = name + "ConstE";
+    doubleVectorMaps_[branchName] = constE;
     if(!treeOut_->GetBranch(branchName.c_str()))
       treeOut_->Branch(branchName.c_str(),&doubleVectorMaps_[branchName]);
     
@@ -219,6 +233,7 @@ void treeWriter::addPartonCollection(std::string name, const std::vector<fastjet
   //we are storing the pt, eta, phi, mass and pdg of partons
   std::vector<double> pt;    pt.reserve(v.size());
   std::vector<double> eta;   eta.reserve(v.size());
+  std::vector<double> e;   e.reserve(v.size());
   std::vector<double> phi;   phi.reserve(v.size());
   std::vector<double> m;     m.reserve(v.size());
   std::vector<int>    pdg;   pdg.reserve(v.size());
@@ -226,6 +241,7 @@ void treeWriter::addPartonCollection(std::string name, const std::vector<fastjet
   for(const fastjet::PseudoJet &p: v) {
     pt.push_back(p.pt());
     eta.push_back(p.eta());
+    e.push_back(p.e());
     phi.push_back(p.phi());
     m.push_back(p.m());
     const int & pdgid = p.user_info<PU14>().pdg_id();
@@ -234,6 +250,7 @@ void treeWriter::addPartonCollection(std::string name, const std::vector<fastjet
 
   addDoubleCollection(name + "Pt",  pt);
   addDoubleCollection(name + "Eta", eta);
+  addDoubleCollection(name + "E", e);
   addDoubleCollection(name + "Phi", phi);
   addDoubleCollection(name + "M",   m);
   addIntCollection(name + "PDG",   pdg);

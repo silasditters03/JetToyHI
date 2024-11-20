@@ -11,14 +11,14 @@ FFLAGS = -Wall -O2
 CXXFLAGS += -std=c++11
 LDFLAGS += -std=c++11
 
-FJCONFIG = /Users/mverweij/soft/fastjet-3.4.0/../fastjet340-install/bin/fastjet-config
-FJLOC = /Users/mverweij/soft/fastjet-3.4.0/../fastjet340-install
+FJCONFIG = /Volumes/D2/users/rosa/fastjet-3.4.2/../fastjet342-install/bin/fastjet-config
+FJLOC = /Volumes/D2/users/rosa/fastjet-3.4.2/../fastjet342-install
 
 INCLUDE += `$(FJCONFIG) --cxxflags`
 LIBRARIES  += -L$(FJLOC)/lib -lRecursiveTools `$(FJCONFIG) --libs --plugins` -lfastjetcontribfragile
-LIBRARIES += -L/usr/local/Cellar/gsl/2.7.1/lib -lgsl -lgslcblas
+LIBRARIES += -L/opt/homebrew/Cellar/gsl/2.7.1/lib -lgsl -lgslcblas
 
-INCLUDE += -I/usr/local/Cellar/gsl/2.7.1/include
+INCLUDE += -I/opt/homebrew/Cellar/gsl/2.7.1/include
 
 INCLUDE += $(LCLINCLUDE)
 
