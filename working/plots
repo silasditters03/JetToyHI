@@ -1,0 +1,624 @@
+#include <TROOT.h>
+#include <TCanvas.h>
+#include <TF1.h>
+#include <TMath.h>
+#include <iostream>
+#include "TGraphErrors.h"
+#include <vector>
+#include <string>
+#include <utility>
+
+#include <TCanvas.h>
+#include <TGraphErrors.h>
+#include <TLegend.h>
+#include <TAxis.h>
+#include <TColor.h>
+
+#include <TCanvas.h>
+#include <TGraphErrors.h>
+#include <TLegend.h>
+#include <TAxis.h>
+#include <TColor.h>
+
+void DrawEEC(
+    TH1* g19az0,
+    TH1* g19bz0,
+    TH1* g19cz0,
+    TH1* g19dz0,
+    const std::string& title,
+    const std::string& outputFileName
+) {
+    // Create a canvas
+    TCanvas* kg = new TCanvas("kg", title.c_str());
+    kg->cd();
+    kg->SetLogx();
+
+    // Set the title for the canvas
+    kg->SetTitle(title.c_str());
+
+    // Configure the graphs
+    g19az0->GetXaxis()->SetRangeUser(1e-3, 1.); // Set the range for the x-axis
+    g19az0->SetLineColor(kBlue);
+    g19bz0->SetLineColor(kGreen);
+    g19cz0->SetLineColor(kOrange);
+    g19dz0->SetLineColor(kBlack);
+
+    // Draw the graphs
+    g19az0->Draw("E");
+    g19bz0->Draw("Esame");
+    g19cz0->Draw("Esame");
+    g19dz0->Draw("Esame");
+
+    // Create and configure the legend
+    TLegend* l19a = new TLegend(0.75, 0.6, 0.98, 0.8); 
+    l19a->AddEntry(g19az0, "(130,150) Gev/c", "l");
+    l19a->AddEntry(g19bz0, "(150, 170) Gev/c", "l");
+    l19a->AddEntry(g19cz0, "(170, 190) Gev/c", "l");
+    l19a->AddEntry(g19dz0, "(190, 210) Gev/c", "l");
+    l19a->Draw();
+
+    // Save the canvas to a file
+    kg->SaveAs(outputFileName.c_str());
+
+    // Clean up
+    delete kg;
+}
+
+
+void DrawScaledEEC(
+    TH1* g19az1s,
+    TH1* g19bz1s,
+    TH1* g19cz1s,
+    TH1* g19dz1s,
+    const std::string& title,
+    const std::string& outputFileName
+) {
+    // Create a canvas
+    TCanvas* kgg = new TCanvas("kgg", title.c_str());
+    kgg->cd();
+    kgg->SetLogx();
+
+    // Set styles for the graphs
+    g19az1s->SetLineColor(kBlue);
+    g19az1s->SetTitle(title.c_str());
+    g19az1s->GetXaxis()->SetTitle("<Ptch jet> * dr");
+    g19az1s->GetXaxis()->SetRangeUser(1e-2, 100); // Set range for axis
+    g19az1s->GetXaxis()->SetLimits(1e-2, 100);   // Set limits for axis
+    
+    g19bz1s->SetLineColor(kGreen);
+    g19cz1s->SetLineColor(kOrange);
+    g19dz1s->SetLineColor(kBlack);
+
+    // Draw the graphs
+    g19az1s->Draw("E");
+    g19bz1s->Draw("Esame");
+    g19cz1s->Draw("Esame");
+    g19dz1s->Draw("Esame");
+
+    // Create and configure the legend
+    TLegend* l19as = new TLegend(0.75, 0.6, 0.98, 0.8); 
+    l19as->AddEntry(g19az1s, "(130,150) Gev/c", "l");
+    l19as->AddEntry(g19bz1s, "(150, 170) Gev/c", "l");
+    l19as->AddEntry(g19cz1s, "(170, 190) Gev/c", "l");
+    l19as->AddEntry(g19dz1s, "(190, 210) Gev/c", "l");
+    l19as->Draw();
+
+    // Save the canvas to a file
+    kgg->SaveAs(outputFileName.c_str());
+
+    // Clean up
+    delete kgg;
+}
+
+
+std::pair<double, double> GaussFit(TH1 *hist, double pt_av, const std::string &output_filename, double b1, double b2, double bound) {
+    if (!hist || hist->GetEntries() == 0) {
+        std::cerr << "Error: Histogram null or empty" << std::endl;
+        return {0.0, 0.0};
+    }
+
+    // Check if no values <= 0
+    for (int i = 1; i <= hist->GetNbinsX(); ++i) {
+        double bin_center = hist->GetBinCenter(i);
+        if (bin_center <= 0) {
+            hist->SetBinContent(i, 0); // invalid bins set to 0
+        }
+    }
+
+    // Define function for the fitting
+    const char *fit_function = "[0]*exp(-pow(log(x)-[1], 2)/(2*pow([2], 2)))";
+    std::unique_ptr<TF1> gaus(new TF1("gaus", fit_function, b1, b2));
+
+    // Initialize parameters
+    double mean_dr = hist->GetMean();
+    double mu_guess = TMath::Log(mean_dr);
+    double sigma_guess = hist->GetRMS();
+    double C_guess = hist->GetMaximum();
+
+    if (sigma_guess <= 0 || mean_dr <= 0) {
+        std::cerr << "Error: Invalid mean or RMS" << std::endl;
+        return {0.0, 0.0};
+    }
+
+    gaus->SetParameters(C_guess, mu_guess, sigma_guess);
+
+    // Perform the initial fit
+    auto fit_result = hist->Fit(gaus.get(), "R L");
+    if (fit_result != 0) {
+        std::cerr << "Initial fit failed!" << std::endl;
+        return {0.0, 0.0};
+    }
+
+    double mu = gaus->GetParameter(1);
+    double sigma = gaus->GetParameter(2);
+
+    // Set the fit range dynamically based on the initial fit
+    double lower_bound = TMath::Exp(mu - bound * sigma);
+    double upper_bound = TMath::Exp(mu + bound * sigma);
+    gaus->SetRange(lower_bound, upper_bound);
+
+    // Second fit with restricted range
+    fit_result = hist->Fit(gaus.get(), "R I");
+    if (fit_result != 0) {
+        std::cerr << "Refined fit failed!" << std::endl;
+        return {0.0, 0.0};
+    }
+
+    // Retrieve final fit parameters
+    double C_fit = gaus->GetParameter(0);
+    mu = gaus->GetParameter(1);
+    sigma = gaus->GetParameter(2);
+    double mu_error = gaus->GetParError(1);
+    double sigma_error = gaus->GetParError(2);
+
+    // Draw histogram with fit
+    auto canvas = std::make_unique<TCanvas>("canvas", "Gaussian Fit", 800, 600);
+    canvas->SetLogx();
+    hist->GetXaxis()->SetRangeUser(1e-3, 1);
+    hist->Draw();
+    gaus->Draw("SAME");
+    canvas->SaveAs(output_filename.c_str());
+
+    // Extract dr_peak and scaled dr_peak
+    double dr_peak = TMath::Exp(mu);
+    double dr_error = dr_peak * mu_error;
+    double scaled_dr_peak = dr_peak * pt_av;
+    double scaled_dr_peak_error = dr_error * pt_av;
+
+    // Print results
+    std::cout << "Results for " << output_filename << ":" << std::endl;
+    std::cout << "Reduced Chi^2: " << gaus->GetChisquare() / gaus->GetNDF() << std::endl;
+    //std::cout << "mu = " << mu << " +/- " << mu_error << std::endl;
+    //std::cout << "sigma = " << sigma << " +/- " << sigma_error << std::endl;
+    //std::cout << "dr peak = " << dr_peak << " +/- " << dr_error << std::endl;
+    std::cout << "scaled dr peak = " << scaled_dr_peak << " +/- " << scaled_dr_peak_error << std::endl;
+
+    return std::make_pair(scaled_dr_peak, scaled_dr_peak_error);
+}
+
+
+
+
+
+
+std::pair<double, double> LinearFit(
+    const std::vector<double>& pt_av1, 
+    const std::vector<double>& scaled_dr_peak, 
+    const std::vector<double>& scaled_dr_peak_error, 
+    const std::string& outputFileName = "linear_fit_with_errors.png") 
+{
+    int n = pt_av1.size(); 
+    //std::vector<double> pt_av_binwidth = {20, 20, 20, 20};
+    TGraphErrors* graph = new TGraphErrors(n, &pt_av1[0], &scaled_dr_peak[0], nullptr, &scaled_dr_peak_error[0]);
+
+    TF1* linearFit = new TF1("linearFit", "[0]", 100, 250); 
+    graph->Fit(linearFit, "Q"); 
+    double fittedRlPeak = linearFit->GetParameter(0);
+    double fittedRlPeakError = linearFit->GetParError(0);
+
+    TCanvas* canvas = new TCanvas("canvas", "Linear Fit", 800, 600);
+    graph->SetTitle("Linear Fit ;pt_av;scaled_dr_peak");
+    graph->SetMarkerStyle(20);
+    graph->Draw("AP"); 
+    linearFit->Draw("same");
+    canvas->SaveAs(outputFileName.c_str());
+
+    delete graph;
+    delete linearFit;
+    delete canvas;
+    return std::make_pair(fittedRlPeak, fittedRlPeakError);
+}
+
+
+void plots() {
+
+    
+    TFile *f1 = new TFile("JetToyResults.root");
+
+
+   
+ // Plots for Counter
+
+    // 2D plot E2C vs dr12 for 2 zcuts
+    TH2 *g9 = dynamic_cast<TH2*>(f1->Get("hSplitZcut1E2C_vs_dr12"));
+    TH2 *g10 = dynamic_cast<TH2*>(f1->Get("hSplitE2C_vs_dr12"));
+    TH2 *g11 = dynamic_cast<TH2*>(f1->Get("hSplitZcut2E2C_vs_dr12"));
+
+    TCanvas *k6 = new TCanvas("k6", "k6", 1800, 600); // wider canvas for both plots
+    k6->Divide(3, 1);  // 2 columns, 1 row
+    k6->cd(1);         
+    g10->Draw("COLZ"); 
+    k6->cd(2);         
+    g9->Draw("COLZ"); 
+    k6->cd(3);
+    g11->Draw("COLZ");
+
+    k6->SaveAs("hSplitE2C_vs_dr12.png");
+
+    //2D plot for log(z*dr12) vs log(1/dr12) for 2 zcuts
+    TH2 *g12= dynamic_cast<TH2*>(f1->Get("Lund plane with applied Zcut1"));
+    TH2 *g13= dynamic_cast<TH2*>(f1->Get("Lund plane with applied Zcut2"));
+    TH2 *g14= dynamic_cast<TH2*>(f1->Get("Lund plane without Zcut"));
+
+    TCanvas *k7 = new TCanvas("k7", "k7", 1800, 600); // wider canvas for both plots
+    k7->Divide(3, 1);  // 2 columns, 1 row
+    k7->cd(1);        
+    g14->Draw("COLZ"); 
+    k7->cd(2);         
+    g12->Draw("COLZ");
+    k7->cd(3);
+    g13->Draw("COLZ"); 
+    k7->SaveAs("hSplitlogzdr_vs_1dr12.png");
+
+    //----------------------------------------------------------
+    // Histograms EEC pt intervals for hadrons 
+    //----------------------------------------------------------
+
+    TH1 *g18a= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_pi1"));
+    TH1 *g18b= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_pi2"));
+    TH1 *g18c= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_pi3"));
+    TH1 *g18d= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_pi4"));
+
+    TCanvas *ks = new TCanvas("ks", "ks");
+    ks->cd();
+    ks->SetLogx();
+    g18a->SetLineColor(kBlue);
+    g18a->SetTitle("Normalised EEC for hadrons per pt interval");
+    g18a->GetXaxis()->SetLimits(1e-3, 1.);        
+    g18b->SetLineColor(kGreen);
+    g18c->SetLineColor(kOrange);
+    g18d->SetLineColor(kBlack);
+    g18a->Draw("E");
+    g18b->Draw("Esame");
+    g18c->Draw("Esame");
+    g18d->Draw("Esame");
+    TLegend *l18a = new TLegend(0.75, 0.6, 0.98, 0.8); 
+    l18a->AddEntry(g18a, "(130,150) Gev/c", "l");
+    l18a->AddEntry(g18b, "(150, 170) Gev/c", "l");
+    l18a->AddEntry(g18c, "(170, 190) Gev/c", "l");
+    l18a->AddEntry(g18d, "(190, 210) Gev/c", "l");
+    l18a->Draw();
+    ks->SaveAs("Hadrons_pt_intervals.png");
+
+    TH1 *g18aa= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaledpi1"));
+    TH1 *g18bb= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaledpi2"));
+    TH1 *g18cc= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaledpi3"));
+    TH1 *g18dd= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaledpi4"));
+
+    TCanvas *kss = new TCanvas("kss", "kss");
+    kss->cd();
+    kss->SetLogx();
+    g18aa->SetLineColor(kBlue);
+    g18aa->SetTitle("Normalised Scaled EEC for hadrons per pt interval");
+    g18aa->GetXaxis()->SetLimits(0.05, 100.);    
+    g18aa->GetXaxis()->SetTitle("<Pt^ch jet> * dR");    
+    g18bb->SetLineColor(kGreen);
+    g18cc->SetLineColor(kOrange);
+    g18dd->SetLineColor(kBlack);
+    g18aa->Draw("E");
+    g18bb->Draw("Esame");
+    g18cc->Draw("Esame");
+    g18dd->Draw("Esame");
+    TLegend *l18as = new TLegend(0.75, 0.6, 0.98, 0.8); 
+    l18as->AddEntry(g18aa, "(130,150) Gev/c", "l");
+    l18as->AddEntry(g18bb, "(150, 170) Gev/c", "l");
+    l18as->AddEntry(g18cc, "(170, 190) Gev/c", "l");
+    l18as->AddEntry(g18dd, "(190, 210) Gev/c", "l");
+    l18as->Draw();
+    kss->SaveAs("Hadrons_pt_intervals_scaled.png");
+
+    //------------------------------------------------------------
+    //Histograms EEC for splittings
+    //------------------------------------------------------------
+
+    TH1 *g19az0= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12pi1"));
+    TH1 *g19bz0= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12pi2"));
+    TH1 *g19cz0= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12pi3"));
+    TH1 *g19dz0= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12pi4"));
+    TH1 *g19az0_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12def2pi1"));
+    TH1 *g19bz0_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12def2pi2"));
+    TH1 *g19cz0_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12def2pi3"));
+    TH1 *g19dz0_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12def2pi4"));
+
+    TH1 *g19az1= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12pi1"));
+    TH1 *g19bz1= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12pi2"));
+    TH1 *g19cz1= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12pi3"));
+    TH1 *g19dz1= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12pi4"));
+    TH1 *g19az1_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12def2pi1"));
+    TH1 *g19bz1_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12def2pi2"));
+    TH1 *g19cz1_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12def2pi3"));
+    TH1 *g19dz1_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12def2pi4"));
+
+    TH1 *g19az2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12pi1"));
+    TH1 *g19bz2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12pi2"));
+    TH1 *g19cz2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12pi3"));
+    TH1 *g19dz2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12pi4"));
+    TH1 *g19az2_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12def2pi1"));
+    TH1 *g19bz2_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12def2pi2"));
+    TH1 *g19cz2_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12def2pi3"));
+    TH1 *g19dz2_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12def2pi4"));
+
+    DrawEEC(g19az0, g19bz0, g19cz0, g19dz0,"EEC Per Pt Bin (No Zcut)","EEC_Split.png");
+    DrawEEC(g19az0_d2, g19bz0_d2, g19cz0_d2, g19dz0_d2,"EEC Per Pt Bin (No Zcut def2)","EEC_Splitdef2.png");
+    DrawEEC(g19az1, g19bz1, g19cz1, g19dz1,"EEC Per Pt Bin (Zcut1)","EEC_SplitZcut1.png");
+    DrawEEC(g19az1_d2, g19bz1_d2, g19cz1_d2, g19dz1_d2,"EEC Per Pt Bin (Zcut1 def2)","EEC_SplitZcut1def2.png");
+    DrawEEC(g19az2, g19bz2, g19cz2, g19dz2,"EEC Per Pt Bin (Zcut2)","EEC_SplitZcut2.png");
+    DrawEEC(g19az2_d2, g19bz2_d2, g19cz2_d2, g19dz2_d2,"EEC Per Pt Bin (Zcut2 def2)","EEC_SplitZcut2def2.png");
+
+    TH1 *g19as= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi1"));
+    TH1 *g19bs= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi2"));
+    TH1 *g19cs= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi3"));
+    TH1 *g19ds= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi4"));
+    TH1 *g19as_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi1_d2"));
+    TH1 *g19bs_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi2_d2"));
+    TH1 *g19cs_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi3_d2"));
+    TH1 *g19ds_d2= dynamic_cast<TH1*>(f1->Get("hSplitE2C_sum_vs_dr12_scaledpi4_d2"));
+
+    TH1 *g19az1s= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi1"));
+    TH1 *g19bz1s= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi2"));
+    TH1 *g19cz1s= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi3"));
+    TH1 *g19dz1s= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi4"));
+    TH1 *g19az1s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi1_d2"));
+    TH1 *g19bz1s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi2_d2"));
+    TH1 *g19cz1s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi3_d2"));
+    TH1 *g19dz1s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut1E2C_sum_vs_dr12_scaledpi4_d2"));
+
+    TH1 *g19az2s= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi1"));
+    TH1 *g19bz2s= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi2"));
+    TH1 *g19cz2s= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi3"));
+    TH1 *g19dz2s= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi4"));
+    TH1 *g19az2s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi1_d2"));
+    TH1 *g19bz2s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi2_d2"));
+    TH1 *g19cz2s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi3_d2"));
+    TH1 *g19dz2s_d2= dynamic_cast<TH1*>(f1->Get("hSplitZcut2E2C_sum_vs_dr12_scaledpi4_d2"));
+
+
+    DrawScaledEEC(g19as, g19bs, g19cs, g19ds,"Scaled EEC Per Pt Bin (No Zcut)", "Scaled_EEC_Split.png");
+    DrawScaledEEC(g19as_d2, g19bs_d2, g19cs_d2, g19ds_d2,"Scaled EEC Per Pt Bin (No Zcut def2)", "Scaled_EEC_Splitdef2.png");
+    DrawScaledEEC(g19az1s, g19bz1s, g19cz1s, g19dz1s,"Scaled EEC Per Pt Bin (Zcut1)", "Scaled_EEC_SplitZcut1.png");
+    DrawScaledEEC(g19az1s_d2, g19bz1s_d2, g19cz1s_d2, g19dz1s_d2,"Scaled EEC Per Pt Bin (Zcut1 def2)", "Scaled_EEC_SplitZcut1def2.png");
+    DrawScaledEEC(g19az2s, g19bz2s, g19cz2s, g19dz2s,"Scaled EEC Per Pt Bin (Zcut2)", "Scaled_EEC_SplitZcut2.png");
+    DrawScaledEEC(g19az2s_d2, g19bz2s_d2, g19cz2s_d2, g19dz2s_d2,"Scaled EEC Per Pt Bin (Zcut2 def2)", "Scaled_EEC_SplitZcut2def2.png");
+
+    // Plots for normalised EEC for 2 definitions N(2 pictures are with and without Zcut)
+    TCanvas *k9 = new TCanvas("k9", "Normalized EEC for splittings (two defenitions)", 2500, 1000);
+
+    k9->cd(1);  
+    gPad->SetLogx();  
+    //gPad->SetLogy();
+    g19az0->SetTitle("Normalized EEC Function (Splittings Zcut)");
+    g19az0->GetXaxis()->SetLimits(1e-3, 1.);        
+    g19az0->GetYaxis()->SetRangeUser(1e-2, 12);
+    g19az0->GetXaxis()->SetTitle("dR");              
+    g19az0->GetYaxis()->SetTitle("Normalized EEC");    
+    g19az0->SetLineColor(kBlue);
+    g19az0_d2->SetLineColor(kRed);
+    g19az0->Draw("E");                               
+    g19az0_d2->Draw("Esame");                           
+    // Add legend for the first plot
+    TLegend *l5 = new TLegend(0.65, 0.6, 0.88, 0.8); 
+    l5->AddEntry(g19az0_d2, "Parton Splittings Def 2", "l");
+    l5->AddEntry(g19az0, "Parton Splittings", "l");
+    l5->Draw();
+    k9->SaveAs("E2C_2_def_splittings.png");
+
+    TH1 *ratio_01_pi1= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut01_pi1"));
+    TH1 *ratio_01_pi2= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut01_pi2"));
+    TH1 *ratio_01_pi3= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut01_pi3"));
+    TH1 *ratio_01_pi4= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut01_pi4"));
+    TH1 *ratio_02_pi1= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut02_pi1"));
+    TH1 *ratio_02_pi2= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut02_pi2"));
+    TH1 *ratio_02_pi3= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut02_pi3"));
+    TH1 *ratio_02_pi4= dynamic_cast<TH1*>(f1->Get("ratio_EEC_zcut02_pi4"));
+    
+    
+    TCanvas *ka = new TCanvas("ka", "ka", 2000, 600); // wider canvas for both plots
+    ka->Divide(4, 1);  // 2 columns, 1 row
+    ka->cd(1);   
+    gPad->SetLogx();
+    ratio_01_pi1->GetXaxis()->SetLimits(1e-3, 0.35);  
+    ratio_01_pi1->GetXaxis()->SetRangeUser(1e-3, 1);  
+    ratio_01_pi1->GetYaxis()->SetRangeUser(0., 2.);  
+    ratio_01_pi1->SetTitle("Pt = (130, 150) Gev/c");
+    ratio_01_pi1->SetLineColor(kRed);
+    ratio_02_pi1->SetLineColor(kGreen);
+    ratio_01_pi1->Draw("E"); 
+    ratio_02_pi1->Draw("Esame");
+    TLegend *la1 = new TLegend(0.65, 0.6, 0.88, 0.8); // Adjust the coordinates as needed
+    la1->AddEntry(ratio_01_pi1, "Ratio for no zcut and zcut= 0.08", "l");
+    la1->AddEntry(ratio_02_pi1, "Ratio for no zcut and zcut= 0.2", "l"); 
+    la1->Draw();
+
+    ka->cd(2);   
+    gPad->SetLogx();
+    ratio_01_pi2->GetXaxis()->SetLimits(1e-3, 0.35);  
+    ratio_01_pi2->GetXaxis()->SetRangeUser(1e-3, 1);  
+    ratio_01_pi2->GetYaxis()->SetRangeUser(0., 2.);  
+    ratio_01_pi2->SetTitle("Pt = (150, 170) Gev/c");
+    ratio_01_pi2->SetLineColor(kRed);
+    ratio_02_pi2->SetLineColor(kGreen);
+    ratio_01_pi2->Draw("E"); 
+    ratio_02_pi2->Draw("Esame");
+    TLegend *la2 = new TLegend(0.65, 0.6, 0.88, 0.8); // Adjust the coordinates as needed
+    la2->AddEntry(ratio_01_pi2, "Ratio for no zcut and zcut= 0.08", "l");
+    la2->AddEntry(ratio_02_pi2, "Ratio for no zcut and zcut= 0.2", "l"); 
+    la2->Draw();
+
+    ka->cd(3);   
+    gPad->SetLogx();
+    ratio_01_pi3->GetXaxis()->SetLimits(1e-3, 0.35);  
+    ratio_01_pi3->GetXaxis()->SetRangeUser(1e-3, 1);  
+    ratio_01_pi3->GetYaxis()->SetRangeUser(0., 2.);  
+    ratio_01_pi3->SetTitle("Pt = (170, 190) Gev/c");
+    ratio_01_pi3->SetLineColor(kRed);
+    ratio_02_pi3->SetLineColor(kGreen);
+    ratio_01_pi3->Draw("E"); 
+    ratio_02_pi3->Draw("Esame");
+    TLegend *la3 = new TLegend(0.65, 0.6, 0.88, 0.8); // Adjust the coordinates as needed
+    la3->AddEntry(ratio_01_pi3, "Ratio for no zcut and zcut= 0.08", "l");
+    la3->AddEntry(ratio_02_pi3, "Ratio for no zcut and zcut= 0.2", "l"); 
+    la3->Draw();
+
+    ka->cd(4);   
+    gPad->SetLogx();
+    ratio_01_pi4->GetXaxis()->SetLimits(1e-3, 0.35);  
+    ratio_01_pi4->GetXaxis()->SetRangeUser(1e-3, 1);  
+    ratio_01_pi4->GetYaxis()->SetRangeUser(0., 2.);  
+    ratio_01_pi4->SetTitle("Pt = (190, 210) Gev/c");
+    ratio_01_pi4->SetLineColor(kRed);
+    ratio_02_pi4->SetLineColor(kGreen);
+    ratio_01_pi4->Draw("E"); 
+    ratio_02_pi4->Draw("Esame");
+    TLegend *la4 = new TLegend(0.65, 0.6, 0.88, 0.8); // Adjust the coordinates as needed
+    la4->AddEntry(ratio_01_pi4, "Ratio for no zcut and zcut= 0.08", "l");
+    la4->AddEntry(ratio_02_pi4, "Ratio for no zcut and zcut= 0.2", "l"); 
+    la4->Draw();
+   
+    ka->SaveAs("ratios_zcuts_for_EEC.png");
+    
+
+
+    //------------------------------------------------------------
+    //                  FITTING
+    //------------------------------------------------------------
+
+    TH1 *Pt_av= dynamic_cast<TH1*>(f1->Get("Pt_averages"));
+    
+    std::vector<double> pt_av = {139.141, 159.031, 179.044, 199.056}; //average pt's per pt interval
+    
+    //For hadrons 
+    auto [sdrpi0_hadrons, sdrpi0_hadrons_er] = GaussFit(g18a, pt_av[0], "fit_hadrons_pt[0].png", 0.005, 0.2, 0.7);
+    auto [sdrpi1_hadrons, sdrpi1_hadrons_er] = GaussFit(g18b, pt_av[1], "fit_hadrons_pt[1].png", 0.005, 0.2, 0.7);
+    auto [sdrpi2_hadrons, sdrpi2_hadrons_er] = GaussFit(g18c, pt_av[2], "fit_hadrons_pt[2].png", 0.005, 0.2, 0.7);
+    auto [sdrpi3_hadrons, sdrpi3_hadrons_er] = GaussFit(g18d, pt_av[3], "fit_hadrons_pt[3].png", 0.005, 0.2, 0.7);
+
+    std::vector<double> sdrpeak_hadr = {sdrpi0_hadrons, sdrpi1_hadrons, sdrpi2_hadrons, sdrpi3_hadrons};
+    std::vector<double> sdrpeak_hadr_er = {sdrpi0_hadrons_er, sdrpi1_hadrons_er, sdrpi2_hadrons_er, sdrpi3_hadrons_er};
+    auto [finalsdrpeak_hadr, finalsdrpeak_hadr_er] = LinearFit(pt_av, sdrpeak_hadr, sdrpeak_hadr_er, "LinearFit_hadrons.png");
+/*
+
+   //For splittings Zcut 0
+   //Def 1 
+    auto [sdrpi0_split_zcut0, sdrpi0_split_zcut0_er] = GaussFit(g19az0, pt_av[0], "fit_splitzcut0_pt[0].png", 0.001, 0.1, 0.7);
+    auto [sdrpi1_split_zcut0, sdrpi1_split_zcut0_er] = GaussFit(g19bz0, pt_av[1], "fit_splitzcut0_pt[1].png", 0.001, 0.1, 0.7);
+    auto [sdrpi2_split_zcut0, sdrpi2_split_zcut0_er] = GaussFit(g19cz0, pt_av[2], "fit_splitzcut0_pt[2].png", 0.001, 0.1, 0.7);
+    auto [sdrpi3_split_zcut0, sdrpi3_split_zcut0_er] = GaussFit(g19dz0, pt_av[3], "fit_splitzcut0_pt[3].png", 0.001, 0.1, 0.7);
+
+    std::vector<double> sdrpeak_zcut0 = {sdrpi0_split_zcut0, sdrpi1_split_zcut0, sdrpi2_split_zcut0, sdrpi3_split_zcut0}; // scaled dr peak for pt intervals
+    std::vector<double> sdrpeak_zcut0_er = {sdrpi0_split_zcut0_er, sdrpi1_split_zcut0_er, sdrpi2_split_zcut0_er, sdrpi3_split_zcut0_er}; // scaled dr peak for pt intervals
+    auto [finalsdrp_split_zcut0, finalsdrp_split_zcut0_er] = LinearFit(pt_av, sdrpeak_zcut0, sdrpeak_zcut0_er, "LinearFit_split_zcut0.png");
+    
+    //Def2
+    auto [sdrpi0_split_zcut0_d2, sdrpi0_split_zcut0_d2_er] = GaussFit(g19az0_d2, pt_av[0], "fit_splitzcut0_pt_def2[0].png", 0.01, 0.1, 0.7);
+    auto [sdrpi1_split_zcut0_d2, sdrpi1_split_zcut0_d2_er] = GaussFit(g19bz0_d2, pt_av[1], "fit_splitzcut0_pt_def2[1].png", 0.01, 0.1, 0.7);
+    auto [sdrpi2_split_zcut0_d2, sdrpi2_split_zcut0_d2_er] = GaussFit(g19cz0_d2, pt_av[2], "fit_splitzcut0_pt_def2[2].png", 0.01, 0.1, 0.7);
+    auto [sdrpi3_split_zcut0_d2, sdrpi3_split_zcut0_d2_er] = GaussFit(g19dz0_d2, pt_av[3], "fit_splitzcut0_pt_def2[3].png", 0.01, 0.1, 0.7);
+
+    std::vector<double> sdrpeak_zcut0_d2 = {sdrpi0_split_zcut0_d2, sdrpi1_split_zcut0_d2, sdrpi2_split_zcut0_d2, sdrpi3_split_zcut0_d2}; // scaled dr peak for pt intervals
+    std::vector<double> sdrpeak_zcut0_d2_er = {sdrpi0_split_zcut0_d2_er, sdrpi1_split_zcut0_d2_er, sdrpi2_split_zcut0_d2_er, sdrpi3_split_zcut0_d2_er}; // scaled dr peak for pt intervals
+    auto [finalsdrp_split_zcut0_d2, finalsdrp_split_zcut0_d2_er] = LinearFit(pt_av, sdrpeak_zcut0_d2, sdrpeak_zcut0_d2_er, "LinearFit_split_zcut0_def2.png");
+
+    //For splittings Zcut 1
+    //Def 1 
+    auto [sdrpi0_split_zcut1, sdrpi0_split_zcut1_er] = GaussFit(g19az1, pt_av[0], "fit_splitzcut1_pt[0].png", 0.001, 0.1, 0.7);
+    auto [sdrpi1_split_zcut1, sdrpi1_split_zcut1_er] = GaussFit(g19bz1, pt_av[1], "fit_splitzcut1_pt[1].png", 0.001, 0.1, 0.7);
+    auto [sdrpi2_split_zcut1, sdrpi2_split_zcut1_er] = GaussFit(g19cz1, pt_av[2], "fit_splitzcut1_pt[2].png", 0.001, 0.1, 0.7);
+    auto [sdrpi3_split_zcut1, sdrpi3_split_zcut1_er] = GaussFit(g19dz1, pt_av[3], "fit_splitzcut1_pt[3].png", 0.001, 0.1, 0.7);
+
+    std::vector<double> sdrpeak_zcut1 = {sdrpi0_split_zcut1, sdrpi1_split_zcut1, sdrpi2_split_zcut1, sdrpi3_split_zcut1}; // scaled dr peak for pt intervals
+    std::vector<double> sdrpeak_zcut1_er = {sdrpi0_split_zcut1_er, sdrpi1_split_zcut1_er, sdrpi2_split_zcut1_er, sdrpi3_split_zcut1_er}; // scaled dr peak for pt intervals
+    auto [finalsdrp_split_zcut1, finalsdrp_split_zcut1_er] = LinearFit(pt_av, sdrpeak_zcut1, sdrpeak_zcut1_er, "LinearFit_split_zcut1.png");
+    //Def2
+    auto [sdrpi0_split_zcut1_d2, sdrpi0_split_zcut1_d2_er] = GaussFit(g19az1_d2, pt_av[0], "fit_splitzcut1_pt_def2[0].png", 0.01, 0.1, 0.7);
+    auto [sdrpi1_split_zcut1_d2, sdrpi1_split_zcut1_d2_er] = GaussFit(g19bz1_d2, pt_av[1], "fit_splitzcut1_pt_def2[1].png", 0.01, 0.1, 0.7);
+    auto [sdrpi2_split_zcut1_d2, sdrpi2_split_zcut1_d2_er] = GaussFit(g19cz1_d2, pt_av[2], "fit_splitzcut1_pt_def2[2].png", 0.01, 0.1, 0.7);
+    auto [sdrpi3_split_zcut1_d2, sdrpi3_split_zcut1_d2_er] = GaussFit(g19dz1_d2, pt_av[3], "fit_splitzcut1_pt_def2[3].png", 0.01, 0.1, 0.7);
+
+    std::vector<double> sdrpeak_zcut1_d2 = {sdrpi0_split_zcut1_d2, sdrpi1_split_zcut1_d2, sdrpi2_split_zcut1_d2, sdrpi3_split_zcut1_d2}; // scaled dr peak for pt intervals
+    std::vector<double> sdrpeak_zcut1_d2_er = {sdrpi0_split_zcut1_d2_er, sdrpi1_split_zcut1_d2_er, sdrpi2_split_zcut1_d2_er, sdrpi3_split_zcut1_d2_er}; // scaled dr peak for pt intervals
+    auto [finalsdrp_split_zcut1_d2, finalsdrp_split_zcut1_d2_er] = LinearFit(pt_av, sdrpeak_zcut1_d2, sdrpeak_zcut1_d2_er, "LinearFit_split_zcut1_def2.png");
+
+     //For splittings Zcut 2
+    //Def 1 
+    auto [sdrpi0_split_zcut2, sdrpi0_split_zcut2_er] = GaussFit(g19az2, pt_av[0], "fit_splitzcut2_pt[0].png", 0.001, 0.1, 0.7);
+    auto [sdrpi1_split_zcut2, sdrpi1_split_zcut2_er] = GaussFit(g19bz2, pt_av[1], "fit_splitzcut2_pt[1].png", 0.001, 0.1, 0.7);
+    auto [sdrpi2_split_zcut2, sdrpi2_split_zcut2_er] = GaussFit(g19cz2, pt_av[2], "fit_splitzcut2_pt[2].png", 0.001, 0.1, 0.7);
+    auto [sdrpi3_split_zcut2, sdrpi3_split_zcut2_er] = GaussFit(g19dz2, pt_av[3], "fit_splitzcut2_pt[3].png", 0.001, 0.1, 0.7);
+
+    std::vector<double> sdrpeak_zcut2 = {sdrpi0_split_zcut2, sdrpi1_split_zcut2, sdrpi2_split_zcut2, sdrpi3_split_zcut2}; // scaled dr peak for pt intervals
+    std::vector<double> sdrpeak_zcut2_er = {sdrpi0_split_zcut2_er, sdrpi1_split_zcut2_er, sdrpi2_split_zcut2_er, sdrpi3_split_zcut2_er}; // scaled dr peak for pt intervals
+    auto [finalsdrp_split_zcut2, finalsdrp_split_zcut2_er] = LinearFit(pt_av, sdrpeak_zcut2, sdrpeak_zcut2_er, "LinearFit_split_zcut2.png");
+    
+    //Def2
+    auto [sdrpi0_split_zcut2_d2, sdrpi0_split_zcut2_d2_er] = GaussFit(g19az2_d2, pt_av[0], "fit_splitzcut2_pt_def2[0].png", 0.01, 0.1, 0.7);
+    auto [sdrpi1_split_zcut2_d2, sdrpi1_split_zcut2_d2_er] = GaussFit(g19bz2_d2, pt_av[1], "fit_splitzcut2_pt_def2[1].png", 0.01, 0.1, 0.7);
+    auto [sdrpi2_split_zcut2_d2, sdrpi2_split_zcut2_d2_er] = GaussFit(g19cz2_d2, pt_av[2], "fit_splitzcut2_pt_def2[2].png", 0.01, 0.1, 0.7);
+    auto [sdrpi3_split_zcut2_d2, sdrpi3_split_zcut2_d2_er] = GaussFit(g19dz2_d2, pt_av[3], "fit_splitzcut2_pt_def2[3].png", 0.01, 0.1, 0.7);
+
+    std::vector<double> sdrpeak_zcut2_d2 = {sdrpi0_split_zcut2_d2, sdrpi1_split_zcut2_d2, sdrpi2_split_zcut2_d2, sdrpi3_split_zcut2_d2}; // scaled dr peak for pt intervals
+    std::vector<double> sdrpeak_zcut2_d2_er = {sdrpi0_split_zcut2_d2_er, sdrpi1_split_zcut2_d2_er, sdrpi2_split_zcut2_d2_er, sdrpi3_split_zcut2_d2_er}; // scaled dr peak for pt intervals
+    auto [finalsdrp_split_zcut2_d2, finalsdrp_split_zcut2_d2_er] = LinearFit(pt_av, sdrpeak_zcut2_d2, sdrpeak_zcut2_d2_er, "LinearFit_split_zcut2_def2.png");
+    
+    std::cout << "Final scaled dr peak hadrons " << finalsdrpeak_hadr << " ± " << finalsdrpeak_hadr_er << std::endl;
+    std::cout << "Final scaled dr peak splittings(zcut0) " << finalsdrp_split_zcut0 << " ± " << finalsdrp_split_zcut0_er << std::endl;
+    std::cout << "Final scaled dr peak splittings def2 (zcut0) " << finalsdrp_split_zcut0_d2 << " ± " << finalsdrp_split_zcut0_d2_er << std::endl;
+    std::cout << "Final scaled dr peak splittings(zcut1) " << finalsdrp_split_zcut1 << " ± " << finalsdrp_split_zcut1_er << std::endl;
+    std::cout << "Final scaled dr peak splittings def2 (zcut1) " << finalsdrp_split_zcut1_d2 << " ± " << finalsdrp_split_zcut1_d2_er << std::endl;
+    std::cout << "Final scaled dr peak splittings(zcut2) " << finalsdrp_split_zcut2 << " ± " << finalsdrp_split_zcut2_er << std::endl;
+    std::cout << "Final scaled dr peak splittings def2 (zcut2) " << finalsdrp_split_zcut2_d2 << " ± " << finalsdrp_split_zcut2_d2_er << std::endl;
+    
+*/
+
+
+
+/*
+    TH1 *g18a= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaled2"));
+    TH1 *g18b= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaled3"));
+    TH1 *g18c= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaled4"));
+    TH1 *g18d= dynamic_cast<TH1*>(f1->Get("hE2C_sum_vs_dr12_scaled5"));
+
+    TCanvas *kp = new TCanvas("kp", "kp");
+    kp->cd();
+    kp->SetLogx();
+    g13->GetYaxis()->SetTitle("Normalised scaled E2C");
+    g13->GetXaxis()->SetTitle("dR");
+    g13->SetTitle("Normalized and scaled EEC for hadrons with zcuts");
+    g13->SetLineColor(kPink);
+    g18a->SetLineColor(kBlue);
+    g18b->SetLineColor(kGreen);
+    g18c->SetLineColor(kOrange);
+    g18d->SetLineColor(kBlack);
+    g13->Draw("E");
+    g18a->Draw("Esame");
+    g18b->Draw("Esame");
+    g18c->Draw("Esame");
+    g18d->Draw("Esame");
+    kp->SaveAs("Hadrons_zcuts.png");
+*/
+
+    
+
+   
+
+    f1->Close();
+}
