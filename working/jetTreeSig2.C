@@ -138,17 +138,22 @@ void jetTreeSig2::Loop()
    //Define histograms 
 //---------------------------------------------
    // smaller bin sizes for low dr12 values
-   std::vector<double> binEdges;
-   for (double binEdge = 0.0; binEdge <= 0.03; binEdge += 0.001) {
-      binEdges.push_back(binEdge);}
-   for (double binEdge = 0.03; binEdge <= 1; binEdge += 0.005) {
-      binEdges.push_back(binEdge);}
-   
+  std::vector<double> binEdges;
+   for (double binEdge = 0.0; binEdge < 0.07; binEdge += 0.003) { // Up to but not including 0.04
+    binEdges.push_back(binEdge);
+   }
+   for (double binEdge = 0.07; binEdge <= 1; binEdge += 0.005) { // Start from 0.04
+    binEdges.push_back(binEdge);
+   }
+
    std::vector<double> binEdgesh;
-   for (double binEdge = 0.0; binEdge <= 0.035; binEdge += 0.001) {
-      binEdgesh.push_back(binEdge);}
-   for (double binEdge = 0.035; binEdge <= 1; binEdge += 0.005) {
-      binEdgesh.push_back(binEdge);}
+   for (double binEdge = 0.0; binEdge < 0.07; binEdge += 0.003) { // Up to but not including 0.035
+    binEdgesh.push_back(binEdge);
+   }
+   for (double binEdge = 0.07; binEdge <= 1; binEdge += 0.005) { // Start from 0.035
+    binEdgesh.push_back(binEdge);
+   }
+
 
    // 1D Histograms counter
    TH1D *hSplitDr12 = new TH1D("hSplitDr12", "dr12 for splits", 100, 0, 1);
@@ -243,11 +248,11 @@ void jetTreeSig2::Loop()
 
 
    //Loops for calculating pt sums and counts
-   const int numIntervals = 21; // 10 intervals 
-   double ptIntervalWidth = 20.0; // Pt intervals of 20 Gev
+   const int numIntervals = 5; // 10 intervals 
+   double ptIntervalWidth = 20.0; // Pt intervals of 30 Gev
    std::vector<double> ptSums(numIntervals, 0.0); // Sum of pt for each interval
    std::vector<int> ptCounts(numIntervals, 0); // Count of jets in each interval
-   TH1D *Pt_averages = new TH1D("Pt_averages", "Pt_averages", numIntervals, 130, 130 + numIntervals * ptIntervalWidth);
+   TH1D *Pt_averages = new TH1D("Pt_averages", "Pt_averages", numIntervals, 40, 40 + numIntervals * ptIntervalWidth);
    //event loop
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
@@ -257,10 +262,10 @@ void jetTreeSig2::Loop()
       //jet loop
       for(int i = 0; i<sigJetPt->size(); ++i) {
          double sigPt = sigJetPt->at(i);
-         if(sigPt<130. || abs(sigJetEta->at(i))>2.) continue;
+         if(sigPt<40. || abs(sigJetEta->at(i))>2) continue; 
          Ptjet->Fill(sigPt);
          // Calculate sums of pt and pt count for this jet
-        int ptBin = static_cast<int>((sigPt-130)/ ptIntervalWidth);
+        int ptBin = static_cast<int>((sigPt-40)/ ptIntervalWidth);
         if (ptBin >= 0 && ptBin < numIntervals) {
             ptSums[ptBin] += sigPt;
             ptCounts[ptBin]++;
@@ -276,8 +281,8 @@ void jetTreeSig2::Loop()
       if (ptCounts[j] > 0) {
          ptAverages[j] = ptSums[j] / ptCounts[j]; // Average for each interval
          }
-          std::cout << "ptBin " << j << " (" << (130 + j * ptIntervalWidth) << "-"
-           << (130 + (j + 1) * ptIntervalWidth) << " GeV): "
+          std::cout << "ptBin " << j << " (" << (40 + j * ptIntervalWidth) << "-"
+           << (40 + (j + 1) * ptIntervalWidth) << " GeV): "
            << ptAverages[j] << std::endl;
          }
    
@@ -298,10 +303,10 @@ void jetTreeSig2::Loop()
       for(int i = 0; i<sigJetPt->size(); ++i) {
         double sigPt = sigJetPt->at(i);
         double sigE = sigJetE->at(i);
-        if(sigPt<130. || abs(sigJetEta->at(i))>2.) continue;//there Rosa can make her cuts
+        if(sigPt<40. || abs(sigJetEta->at(i))>2) continue;//there Rosa can make her cuts
 
          // Calculate jet interval index
-        int ptBin = static_cast<int>((sigPt - 130) / ptIntervalWidth);
+        int ptBin = static_cast<int>((sigPt - 40) / ptIntervalWidth);
         if (ptBin < 0 || ptBin >= numIntervals) continue; 
 
          //loop over hadron pairs
@@ -353,7 +358,7 @@ void jetTreeSig2::Loop()
         double eradSigSDBeta00Z03_val = eradSigSDBeta00Z03->at(i);  
         double productSigSDBeta00Z03_val = productSigSDBeta00Z03->at(i);  
         double dr12SigSDBeta00Z03_val = dr12SigSDBeta00Z03->at(i);
-        //std::cout<<"EC201: "<< productSigSDBeta00Z01_val/sigE <<std::endl; //print values of erad
+        //std::cout<<"EC301: "<< productSigSDBeta00Z01_val/sigE <<std::endl; //print values of erad
         //std::cout<< sigE <<std::endl;
         //h1JPtW->Fill(sigPt, evWeight);// add jet norm im plotting - from pt spectrun
         //Fill 1D histograms
