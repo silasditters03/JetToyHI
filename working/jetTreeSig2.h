@@ -71,6 +71,8 @@ public :
    vector<vector<double> > *zg_hadron_pairs;
    vector<vector<double> > *dr_hadron_pairs;
    vector<vector<double> > *E2C_hadron_pairs;
+   vector<vector<double> > *mom_pt_hadron_pairs;
+   vector<vector<double> > *jet_pt_hadron_pairs;
 
 
    /*
@@ -119,6 +121,8 @@ public :
    TBranch        *b_zg_hadron_pairs;
    TBranch        *b_dr_hadron_pairs;
    TBranch        *b_E2C_hadron_pairs;   
+   TBranch        *b_mom_pt_hadron_pairs;
+   TBranch        *b_jet_pt_hadron_pairs;
    
    /*
    TBranch        *b_dr_hadron_pairs_zcut2;
@@ -214,7 +218,7 @@ jetTreeSig2::jetTreeSig2(TTree *tree) : fChain(0)
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
    if (tree == 0) {
-      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/Volumes/D2/users/rosa/JetToyHI/JetToyHIResultSimpleJetAnalysis.root");
+      TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("/Volumes/D2/users/SilasDitters/JetToyHI/JetToyHIResultSimpleJetAnalysis.root");
       //TFile *f = (TFile*)gROOT->GetListOfFiles()->FindObject("JetToyHIResultTimeClusJewel_simple.root");
       if (!f || !f->IsOpen()) {
      //   std::cout<<"problemo"<<std::endl;
@@ -289,6 +293,8 @@ void jetTreeSig2::Init(TTree *tree)
    zg_hadron_pairs = 0;
    dr_hadron_pairs = 0;
    E2C_hadron_pairs = 0;
+   mom_pt_hadron_pairs = 0;
+   jet_pt_hadron_pairs = 0;
    /*
    E2C_hadron_pairs_zcut2 = 0;
    E2C_hadron_pairs_zcut3 = 0;
@@ -380,6 +386,8 @@ void jetTreeSig2::Init(TTree *tree)
    fChain->SetBranchAddress("E2C_hadron_pairs", &E2C_hadron_pairs, &b_E2C_hadron_pairs);
    fChain->SetBranchAddress("dr_hadron_pairs", &dr_hadron_pairs, &b_dr_hadron_pairs);
    fChain->SetBranchAddress("zg_hadron_pairs", &zg_hadron_pairs, &b_zg_hadron_pairs);
+   fChain->SetBranchAddress("mom_pt_hadron_pairs", &mom_pt_hadron_pairs, &b_mom_pt_hadron_pairs);
+   fChain->SetBranchAddress("jet_pt_hadron_pairs", &jet_pt_hadron_pairs, &b_jet_pt_hadron_pairs);
    /*
    fChain->SetBranchAddress("E2C_hadron_pairs_zcut2", &E2C_hadron_pairs_zcut2, &b_E2C_hadron_pairs_zcut2);
    fChain->SetBranchAddress("E2C_hadron_pairs_zcut3", &E2C_hadron_pairs_zcut3, &b_E2C_hadron_pairs_zcut3);
