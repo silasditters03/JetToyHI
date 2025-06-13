@@ -137,22 +137,67 @@ void jetTreeSig2::Loop()
 //---------------------------------------------
    //Define histograms 
 //---------------------------------------------
+
    // smaller bin sizes for low dr12 values
+  
+  //Commented out to first try better scaling for tau
   std::vector<double> binEdges;
-   for (double binEdge = 0.0; binEdge < 0.07; binEdge += 0.003) { // Up to but not including 0.04
+   for (double binEdge = 0.0; binEdge < 0.1; binEdge += 0.005) { // Up to but not including 0.04
     binEdges.push_back(binEdge);
    }
-   for (double binEdge = 0.07; binEdge <= 1; binEdge += 0.005) { // Start from 0.04
+   for (double binEdge = 0.1; binEdge < 0.6; binEdge += 0.02) { // Up to but not including 0.04
+    binEdges.push_back(binEdge);
+   }
+   for (double binEdge = 0.6; binEdge <= 3; binEdge += 0.06) { // Start from 0.04
+    binEdges.push_back(binEdge);
+   }
+   for (double binEdge = 3; binEdge <= 10; binEdge += 0.2) { // Start from 0.04
     binEdges.push_back(binEdge);
    }
 
    std::vector<double> binEdgesh;
-   for (double binEdge = 0.0; binEdge < 0.07; binEdge += 0.003) { // Up to but not including 0.035
+   for (double binEdge = 0.0; binEdge < 0.01; binEdge += 0.001) { // Up to but not including 0.035
     binEdgesh.push_back(binEdge);
    }
-   for (double binEdge = 0.07; binEdge <= 1; binEdge += 0.005) { // Start from 0.035
+   for (double binEdge = 0.01; binEdge < 0.1; binEdge += 0.005) { // Up to but not including 0.035
     binEdgesh.push_back(binEdge);
    }
+   for (double binEdge = 0.1; binEdge < 0.3; binEdge += 0.01) { // Up to but not including 0.035
+    binEdgesh.push_back(binEdge);
+   }
+   for (double binEdge = 0.3; binEdge <= 5; binEdge += 0.05) { // Start from 0.035
+    binEdgesh.push_back(binEdge);
+   }
+    for (double binEdge = 5; binEdge <= 50; binEdge += 0.3) { // Start from 0.035
+    binEdgesh.push_back(binEdge);
+   }
+   for (double binEdge = 50; binEdge <= 100; binEdge += 2) { // Start from 0.035
+    binEdgesh.push_back(binEdge);
+   }
+   for (double binEdge = 100; binEdge <= 1000; binEdge += 5) { // Start from 0.035
+    binEdgesh.push_back(binEdge);
+   }
+
+    //for (double binEdge = 15; binEdge <= 700; binEdge += 3) { // Start from 0.035
+    //binEdgesh.push_back(binEdge);
+   //}
+   
+
+    /*
+   std::vector<double> binEdges;
+   for (double binEdge = 0.0; binEdge < 3; binEdge += 0.03) { // Up to but not including 0.04
+      binEdges.push_back(binEdge);
+     }
+
+
+   std::vector<double> binEdgesh;
+   for (double binEdge = 0.0; binEdge < 3; binEdge += 0.03) { // Up to but not including 0.035
+   binEdgesh.push_back(binEdge);
+   }
+*/
+   
+
+
 
 
    // 1D Histograms counter
@@ -171,6 +216,12 @@ void jetTreeSig2::Loop()
    TH1D *hSplitZcut1LogDr12 = new TH1D("hSplitZcut1LogDr12", "Log(dr12) for splits with Zcut", 100, 0, 6);
    TH1D *hSplitZcut1LogZTheta = new TH1D("hSplit1ZcutLogZTheta", "Log(z * theta) for splits with Zcut", 100, -6, 1);
    TH1D *hSplitZcut1Z = new TH1D("hSplit1ZcutZ", "z for splits", 100, 0, 1);
+
+
+   // 1D histogram - SILAS
+   TH1D *hist_t_form = new TH1D("t_form", "formation time for splits", 1000, 0 , 500);
+   TH1D *hist_t_form_def2 = new TH1D("t_form_def2", "formation time for splits", 1000, 0 , 500);
+ 
    
    // 2D Histograms for counter E2C vs dr12 
    TH2D *hSplitZcut1E2C_vs_dr12 = new TH2D("hSplitZcut1E2C_vs_dr12", "E2C vs dr12 (Zcut1); dr12; E2C", 200, 0., 0.5, 100, 0., 1.); //defenition 1 of E2C
@@ -202,6 +253,26 @@ void jetTreeSig2::Loop()
    TH1D *hSplitZcut2E2C_sum_vs_dr12def2pi3 = new TH1D("hSplitZcut2E2C_sum_vs_dr12def2pi3", "Summed E2C per dr12; dr12; Summed E2C", binEdges.size() - 1, &binEdges[0]);
    TH1D *hSplitZcut2E2C_sum_vs_dr12def2pi4 = new TH1D("hSplitZcut2E2C_sum_vs_dr12def2pi4", "Summed E2C per dr12; dr12; Summed E2C", binEdges.size() - 1, &binEdges[0]);
 
+   // Same as ^ but for SILAS
+   TH1D *hSplitZcut1E2C_sum_vs_taupi1 = new TH1D("hSplitZcut1E2C_sum_vs_taupi1", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_taupi2 = new TH1D("hSplitZcut1E2C_sum_vs_taupi2", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_taupi3 = new TH1D("hSplitZcut1E2C_sum_vs_taupi3", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_taupi4 = new TH1D("hSplitZcut1E2C_sum_vs_taupi4", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi1 = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi1", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi2 = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi2", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi3 = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi3", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi4 = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi4", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdges.size() - 1, &binEdges[0]);
+
+   TH1D *hSplitZcut2E2C_sum_vs_taupi1 = new TH1D("hSplitZcut2E2C_sum_vs_taupi1", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_taupi2 = new TH1D("hSplitZcut2E2C_sum_vs_taupi2", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_taupi3 = new TH1D("hSplitZcut2E2C_sum_vs_taupi3", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_taupi4 = new TH1D("hSplitZcut2E2C_sum_vs_taupi4", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_tau_def2pi1 = new TH1D("hSplitZcut2E2C_sum_vs_tau_def2pi1", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_tau_def2pi2 = new TH1D("hSplitZcut2E2C_sum_vs_tau_def2pi2", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_tau_def2pi3 = new TH1D("hSplitZcut2E2C_sum_vs_tau_def2pi3", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+   TH1D *hSplitZcut2E2C_sum_vs_tau_def2pi4 = new TH1D("hSplitZcut2E2C_sum_vs_tau_def2pi4", "Summed E2C per #tau_{f}; #tau_{f}; Summed E2C", binEdges.size() - 1, &binEdges[0]);
+
+
    //without Zcut
    TH1D *hSplitE2C_sum_vs_dr12pi1 = new TH1D("hSplitE2C_sum_vs_dr12pi1", "Summed E2C per dr12; dr12; Summed E2C", binEdges.size() - 1, &binEdges[0]);
    TH1D *hSplitE2C_sum_vs_dr12pi2 = new TH1D("hSplitE2C_sum_vs_dr12pi2", "Summed E2C per dr12; dr12; Summed E2C", binEdges.size() - 1, &binEdges[0]);
@@ -226,11 +297,67 @@ void jetTreeSig2::Loop()
    // Histograms for hadron pairs
    TH2D *hE2C_hadron_pairs = new TH2D("hE2C_hadron_pairs0p5", "EC2 vs dr12 (hadron pairs); dr12; E2C", 200, 0., 0.8, 100, 0., 1.);
    
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi1 = new TH1D("hE2C_sum_vs_dr12_pi1", "Summed E2C per dr12; dr12; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi2 = new TH1D("hE2C_sum_vs_dr12_pi2", "Summed E2C per dr12; dr12; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi3 = new TH1D("hE2C_sum_vs_dr12_pi3", "Summed E2C per dr12; dr12; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi4 = new TH1D("hE2C_sum_vs_dr12_pi4", "Summed E2C per dr12; dr12; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi1 = new TH1D("hE2C_sum_vs_dr12_pi1", "Summed E2C per dr12; R_{L}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi2 = new TH1D("hE2C_sum_vs_dr12_pi2", "Summed E2C per dr12; R_{L}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi3 = new TH1D("hE2C_sum_vs_dr12_pi3", "Summed E2C per dr12; R_{L}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi4 = new TH1D("hE2C_sum_vs_dr12_pi4", "Summed E2C per dr12; R_{L}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
    
+   // Histogram for hadron pairs - SILAS
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1 = new TH1D("hE2C_sum_vs_tau_pi1", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2 = new TH1D("hE2C_sum_vs_tau_pi2", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3 = new TH1D("hE2C_sum_vs_tau_pi3", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4 = new TH1D("hE2C_sum_vs_tau_pi4", "Summed E2C per #tau_{f}; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+   TH1D *hist_t_form_hadr = new TH1D("t_form_hadr", "formation time for splits", 100, 0 , 30);
+
+   TH1D *hist_dr_hadron = new TH1D("dr", "dr for hadrons", 1000, 0 , 1);
+
+   // ^ but fot other definiton
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_def2 = new TH1D("hE2C_sum_vs_tau_pi1_def2", "Summed E2C per #tau_{f} def2; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_def2 = new TH1D("hE2C_sum_vs_tau_pi2_def2", "Summed E2C per #tau_{f} def2; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_def2 = new TH1D("hE2C_sum_vs_tau_pi3_def2", "Summed E2C per #tau_{f} def2; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_def2 = new TH1D("hE2C_sum_vs_tau_pi4_def2", "Summed E2C per #tau_{f} def2; #tau_{f} (fm); Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+   TH1D *hist_t_form_hadr_def2 = new TH1D("t_form_hadr_def2", "formation time for splits for def2", 100, 0 , 30);
+
+  //Defining more histograms for the hadron EEC's per R_L Regime
+  // R_L Bound Hadron Region
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_R1 = new TH1D("hE2C_sum_vs_tau_pi1_R1", "Summed E2C per #tau_{f} (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_R1 = new TH1D("hE2C_sum_vs_tau_pi2_R1", "Summed E2C per #tau_{f} (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_R1 = new TH1D("hE2C_sum_vs_tau_pi3_R1", "Summed E2C per #tau_{f} (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_R1 = new TH1D("hE2C_sum_vs_tau_pi4_R1", "Summed E2C per #tau_{f} (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+   // ^ but fot other definiton
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_def2_R1 = new TH1D("hE2C_sum_vs_tau_pi1_def2_R1", "Summed E2C per #tau_{f} def2 (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_def2_R1 = new TH1D("hE2C_sum_vs_tau_pi2_def2_R1", "Summed E2C per #tau_{f} def2 (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_def2_R1 = new TH1D("hE2C_sum_vs_tau_pi3_def2_R1", "Summed E2C per #tau_{f} def2 (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_def2_R1 = new TH1D("hE2C_sum_vs_tau_pi4_def2_R1", "Summed E2C per #tau_{f} def2 (bound hadron region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+   // R_L Intermediate Region
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_R2 = new TH1D("hE2C_sum_vs_tau_pi1_R2", "Summed E2C per #tau_{f} (Intermediate region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_R2 = new TH1D("hE2C_sum_vs_tau_pi2_R2", "Summed E2C per #tau_{f} (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_R2 = new TH1D("hE2C_sum_vs_tau_pi3_R2", "Summed E2C per #tau_{f} (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_R2 = new TH1D("hE2C_sum_vs_tau_pi4_R2", "Summed E2C per #tau_{f} (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+   // ^ but fot other definiton
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_def2_R2 = new TH1D("hE2C_sum_vs_tau_pi1_def2_R2", "Summed E2C per #tau_{f} def2 (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_def2_R2 = new TH1D("hE2C_sum_vs_tau_pi2_def2_R2", "Summed E2C per #tau_{f} def2 (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_def2_R2 = new TH1D("hE2C_sum_vs_tau_pi3_def2_R2", "Summed E2C per #tau_{f} def2 (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_def2_R2 = new TH1D("hE2C_sum_vs_tau_pi4_def2_R2", "Summed E2C per #tau_{f} def2 (Intermediate  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+    // R_L PQCD Region
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_R3 = new TH1D("hE2C_sum_vs_tau_pi1_R3", "Summed E2C per #tau_{f} (PQCD region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_R3 = new TH1D("hE2C_sum_vs_tau_pi2_R3", "Summed E2C per #tau_{f} (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_R3 = new TH1D("hE2C_sum_vs_tau_pi3_R3", "Summed E2C per #tau_{f} (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_R3 = new TH1D("hE2C_sum_vs_tau_pi4_R3", "Summed E2C per #tau_{f} (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+   // ^ but fot other definiton
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_def2_R3 = new TH1D("hE2C_sum_vs_tau_pi1_def2_R3", "Summed E2C per #tau_{f} def2 (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_def2_R3 = new TH1D("hE2C_sum_vs_tau_pi2_def2_R3", "Summed E2C per #tau_{f} def2 (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_def2_R3 = new TH1D("hE2C_sum_vs_tau_pi3_def2_R3", "Summed E2C per #tau_{f} def2 (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_def2_R3 = new TH1D("hE2C_sum_vs_tau_pi4_def2_R3", "Summed E2C per #tau_{f} def2 (PQCD  region); #tau_{f}; Summed E2C", binEdgesh.size() - 1, &binEdgesh[0]);
+
+
    /*
    TH1D *hE2C_sum_vs_dr12_scaled_zcut2 = new TH1D("hE2C_sum_vs_dr12_scaled2", "Scaled E2C per dr12; dr12; Summed E2C", 200, 0., 400.);
    TH1D *hE2C_sum_vs_dr12_scaled_zcut3 = new TH1D("hE2C_sum_vs_dr12_scaled3", "Scaled E2C per dr12; dr12; Summed E2C", 200, 0., 400.);
@@ -238,6 +365,119 @@ void jetTreeSig2::Loop()
    TH1D *hE2C_sum_vs_dr12_scaled_zcut5 = new TH1D("hE2C_sum_vs_dr12_scaled5", "Scaled E2C per dr12; dr12; Summed E2C", 200, 0., 400.);
    */
 
+   //2D histograms for R_L and tau_f correlation
+   TH2D *h_correlation_tau_RL_pi1_w1 = new TH2D("h_correlation_tau_RL_pi1_w1", "Correlation between #tau_{f} and R_{L} (Weight = 1) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi2_w1 = new TH2D("h_correlation_tau_RL_pi2_w1", "Correlation between #tau_{f} and R_{L} (Weight = 1) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi3_w1 = new TH2D("h_correlation_tau_RL_pi3_w1", "Correlation between #tau_{f} and R_{L} (Weight = 1) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi4_w1 = new TH2D("h_correlation_tau_RL_pi4_w1", "Correlation between #tau_{f} and R_{L} (Weight = 1) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+
+   TH2D *h_correlation_tau_RL_pi1_wEEC = new TH2D("h_correlation_tau_RL_pi1_wEEC", "Correlation between #tau_{f} and R_{L} (Weight = EEC) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi2_wEEC = new TH2D("h_correlation_tau_RL_pi2_wEEC", "Correlation between #tau_{f} and R_{L} (Weight = EEC) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi3_wEEC = new TH2D("h_correlation_tau_RL_pi3_wEEC", "Correlation between #tau_{f} and R_{L} (Weight = EEC) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi4_wEEC = new TH2D("h_correlation_tau_RL_pi4_wEEC", "Correlation between #tau_{f} and R_{L} (Weight = EEC) ; #tau_{f} #it{(fm)}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+
+
+   
+   h_correlation_tau_RL_pi1_w1->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi2_w1->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi3_w1->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi4_w1->GetYaxis()->SetRangeUser(0.0, 1.0);
+
+   h_correlation_tau_RL_pi1_wEEC->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi2_wEEC->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi3_wEEC->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi4_wEEC->GetYaxis()->SetRangeUser(0.0, 1.0);
+
+   h_correlation_tau_RL_pi1_w1->SetStats(0);
+   h_correlation_tau_RL_pi2_w1->SetStats(0);
+   h_correlation_tau_RL_pi3_w1->SetStats(0);
+   h_correlation_tau_RL_pi4_w1->SetStats(0);
+
+   h_correlation_tau_RL_pi1_wEEC->SetStats(0);
+   h_correlation_tau_RL_pi2_wEEC->SetStats(0);
+   h_correlation_tau_RL_pi3_wEEC->SetStats(0);
+   h_correlation_tau_RL_pi4_wEEC->SetStats(0);
+
+   h_correlation_tau_RL_pi1_w1->SetTitle("");
+   h_correlation_tau_RL_pi2_w1->SetTitle("");
+   h_correlation_tau_RL_pi3_w1->SetTitle("");
+   h_correlation_tau_RL_pi4_w1->SetTitle("");
+
+   h_correlation_tau_RL_pi1_wEEC->SetTitle("");
+   h_correlation_tau_RL_pi2_wEEC->SetTitle("");
+   h_correlation_tau_RL_pi3_wEEC->SetTitle("");
+   h_correlation_tau_RL_pi4_wEEC->SetTitle("");
+
+   h_correlation_tau_RL_pi1_w1->GetXaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi2_w1->GetXaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi3_w1->GetXaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi4_w1->GetXaxis()->SetTitleSize(0.07);
+
+   h_correlation_tau_RL_pi1_wEEC->GetXaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi2_wEEC->GetXaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi3_wEEC->GetXaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi4_wEEC->GetXaxis()->SetTitleSize(0.07);
+
+   h_correlation_tau_RL_pi1_w1->GetYaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi2_w1->GetYaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi3_w1->GetYaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi4_w1->GetYaxis()->SetTitleSize(0.07);
+
+   h_correlation_tau_RL_pi1_wEEC->GetYaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi2_wEEC->GetYaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi3_wEEC->GetYaxis()->SetTitleSize(0.07);
+   h_correlation_tau_RL_pi4_wEEC->GetYaxis()->SetTitleSize(0.07);
+
+
+
+   //same as ^ but for hadrons t_form_def2
+   TH2D *h_correlation_tau_RL_pi1_w1_def2 = new TH2D("h_correlation_tau_RL_pi1_w1_def2", "Correlation between #tau_{f} and R_{L} (Weight = 1) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi2_w1_def2 = new TH2D("h_correlation_tau_RL_pi2_w1_def2", "Correlation between #tau_{f} and R_{L} (Weight = 1) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi3_w1_def2 = new TH2D("h_correlation_tau_RL_pi3_w1_def2", "Correlation between #tau_{f} and R_{L} (Weight = 1) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi4_w1_def2 = new TH2D("h_correlation_tau_RL_pi4_w1_def2", "Correlation between #tau_{f} and R_{L} (Weight = 1) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+
+   TH2D *h_correlation_tau_RL_pi1_wEEC_def2 = new TH2D("h_correlation_tau_RL_pi1_wEEC_def2", "Correlation between #tau_{f} and R_{L} (Weight = EEC) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi2_wEEC_def2 = new TH2D("h_correlation_tau_RL_pi2_wEEC_def2", "Correlation between #tau_{f} and R_{L} (Weight = EEC) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi3_wEEC_def2 = new TH2D("h_correlation_tau_RL_pi3_wEEC_def2", "Correlation between #tau_{f} and R_{L} (Weight = EEC) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+   TH2D *h_correlation_tau_RL_pi4_wEEC_def2 = new TH2D("h_correlation_tau_RL_pi4_wEEC_def2", "Correlation between #tau_{f} and R_{L} (Weight = EEC) (#tau_{f} def 2); #tau_{f}; R_{L}", binEdgesh.size() - 1, &binEdgesh[0], binEdgesh.size() - 1, &binEdgesh[0] );
+
+
+   h_correlation_tau_RL_pi1_w1_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi2_w1_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi3_w1_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi4_w1_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+
+   h_correlation_tau_RL_pi1_wEEC_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi2_wEEC_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi3_wEEC_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+   h_correlation_tau_RL_pi4_wEEC_def2->GetYaxis()->SetRangeUser(0.0, 1.0);
+
+   h_correlation_tau_RL_pi1_w1_def2->SetStats(0);
+   h_correlation_tau_RL_pi2_w1_def2->SetStats(0);
+   h_correlation_tau_RL_pi3_w1_def2->SetStats(0);
+   h_correlation_tau_RL_pi4_w1_def2->SetStats(0);
+
+   h_correlation_tau_RL_pi1_wEEC_def2->SetStats(0);
+   h_correlation_tau_RL_pi2_wEEC_def2->SetStats(0);
+   h_correlation_tau_RL_pi3_wEEC_def2->SetStats(0);
+   h_correlation_tau_RL_pi4_wEEC_def2->SetStats(0);
+
+   h_correlation_tau_RL_pi1_w1_def2->SetTitle("");
+   h_correlation_tau_RL_pi2_w1_def2->SetTitle("");
+   h_correlation_tau_RL_pi3_w1_def2->SetTitle("");
+   h_correlation_tau_RL_pi4_w1_def2->SetTitle("");
+
+   h_correlation_tau_RL_pi1_wEEC_def2->SetTitle("");
+   h_correlation_tau_RL_pi2_wEEC_def2->SetTitle("");
+   h_correlation_tau_RL_pi3_wEEC_def2->SetTitle("");
+   h_correlation_tau_RL_pi4_wEEC_def2->SetTitle("");
+
+   gStyle->SetOptStat(0000000);
+
+
+int val1 = 0;
+int val2 = 0;
+int val3 = 0;
 
    //Histogram for jets
    TH1D *Ptjet = new TH1D("Pt jet", "Ptjet",100, 1., 500.);
@@ -270,8 +510,15 @@ void jetTreeSig2::Loop()
             ptSums[ptBin] += sigPt;
             ptCounts[ptBin]++;
         }
+
       }
    }
+
+   for (int i =0; i < 4; i++) {
+      cout << "Bin " << i<< " has " << ptCounts[i] << " jets in it" << endl;
+   }
+
+
 
    int total_n_Jets = Ptjet->GetEntries(); // calculating total number of jets
 
@@ -285,10 +532,12 @@ void jetTreeSig2::Loop()
            << (40 + (j + 1) * ptIntervalWidth) << " GeV): "
            << ptAverages[j] << std::endl;
          }
-   
+
+
 
    //Loops for filling histograms
    //event loop
+   //DIE 1 MOET nentries WORDEN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    for (Long64_t jentry=0; jentry<nentries;jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
@@ -314,25 +563,225 @@ void jetTreeSig2::Loop()
             double sig_E2C_pairs = E2C_hadron_pairs->at(i).at(p);
             double sig_dr_pairs = dr_hadron_pairs->at(i).at(p);
             double sig_zg_pairs = zg_hadron_pairs->at(i).at(p);
+            double sig_mom_pt = mom_pt_hadron_pairs->at(i).at(p);
+            double sig_jet_pt = jet_pt_hadron_pairs->at(i).at(p);
+
+
+            double hbarc = 0.19732697;
+            double GeVtofm = 1./hbarc; //~5.068;
+
+            double t_form = 1./( 2 * sig_mom_pt* GeVtofm * sig_zg_pairs * (1 - sig_zg_pairs) * (1 - cos( sig_dr_pairs))  );
+            double t_form_def2 = 1./( 2 * sig_jet_pt* GeVtofm * sig_zg_pairs * (1 - sig_zg_pairs) * (1 - cos( sig_dr_pairs))  );
+
+            hist_t_form_hadr->Fill(t_form);
+            hist_t_form_hadr_def2->Fill(t_form_def2);
+
+            hist_dr_hadron->Fill(sig_dr_pairs);
 
             hE2C_hadron_pairs->Fill(sig_dr_pairs, sig_E2C_pairs);
 
             int binIndex = hE2C_sum_vs_dr12_zcut1_pi1->GetXaxis()->FindBin(sig_dr_pairs);
             double binWidth = hE2C_sum_vs_dr12_zcut1_pi1->GetBinWidth(binIndex);
             if (ptBin == 0) {
-            hE2C_sum_vs_dr12_zcut1_pi1->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * total_n_Jets));
+            hE2C_sum_vs_dr12_zcut1_pi1->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * ptCounts[0]));
             }
             if (ptBin == 1) {
-            hE2C_sum_vs_dr12_zcut1_pi2->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * total_n_Jets));
+            hE2C_sum_vs_dr12_zcut1_pi2->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * ptCounts[1]));
             }
             if (ptBin == 2) {
-            hE2C_sum_vs_dr12_zcut1_pi3->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * total_n_Jets));
+            hE2C_sum_vs_dr12_zcut1_pi3->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * ptCounts[2]));
             }
             if (ptBin == 3) {
-            hE2C_sum_vs_dr12_zcut1_pi4->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * total_n_Jets));
+            hE2C_sum_vs_dr12_zcut1_pi4->Fill(sig_dr_pairs, sig_E2C_pairs / (binWidth * ptCounts[3]));
             }
+
+            // EEC vs tau for tau_def 1
+            int binIndex2 = hE2C_sum_vs_tau_zcut1_pi1->GetXaxis()->FindBin(t_form);
+            double binWidth2 = hE2C_sum_vs_tau_zcut1_pi1->GetBinWidth(binIndex2);
+            if (ptBin == 0) {
+               hE2C_sum_vs_tau_zcut1_pi1->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[0]));
+               }
+            if (ptBin == 1) {
+               hE2C_sum_vs_tau_zcut1_pi2->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[1]));
+               }
+            if (ptBin == 2) {
+               hE2C_sum_vs_tau_zcut1_pi3->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[2]));
+               }
+            if (ptBin == 3) {
+               hE2C_sum_vs_tau_zcut1_pi4->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[3]));
+               }
           
+            // EEC vs tau for tau_def 2
+            int binIndex3 = hE2C_sum_vs_tau_zcut1_pi1_def2->GetXaxis()->FindBin(t_form_def2);
+            double binWidth3 = hE2C_sum_vs_tau_zcut1_pi1_def2->GetBinWidth(binIndex3);
+            if (ptBin == 0) {
+               hE2C_sum_vs_tau_zcut1_pi1_def2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[0]));
+               }
+            if (ptBin == 1) {
+               hE2C_sum_vs_tau_zcut1_pi2_def2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[1]));
+               }
+            if (ptBin == 2) {
+               hE2C_sum_vs_tau_zcut1_pi3_def2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[2]));
+               }
+            if (ptBin == 3) {
+               hE2C_sum_vs_tau_zcut1_pi4_def2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[3]));
+               }
+
+
+            //2D histograms def1
+            if (ptBin == 0){
+               h_correlation_tau_RL_pi1_w1->Fill(t_form, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi1_wEEC->Fill(t_form, sig_dr_pairs, sig_E2C_pairs / (binWidth2 * ptCounts[0]));
+            }
+            if (ptBin == 1){
+               h_correlation_tau_RL_pi2_w1->Fill(t_form, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi2_wEEC->Fill(t_form, sig_dr_pairs, sig_E2C_pairs / (binWidth2 * ptCounts[1]));
+            }
+            if (ptBin == 2){
+               h_correlation_tau_RL_pi3_w1->Fill(t_form, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi3_wEEC->Fill(t_form, sig_dr_pairs, sig_E2C_pairs / (binWidth2 * ptCounts[2]));
+            }
+            if (ptBin == 3){
+               h_correlation_tau_RL_pi4_w1->Fill(t_form, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi4_wEEC->Fill(t_form, sig_dr_pairs, sig_E2C_pairs / (binWidth2 * ptCounts[3]));
+            }
+
+            //2D histograms def2
+            if (ptBin == 0){
+               h_correlation_tau_RL_pi1_w1_def2->Fill(t_form_def2, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi1_wEEC_def2->Fill(t_form_def2, sig_dr_pairs, sig_E2C_pairs / (binWidth3 * ptCounts[0]));
+            }
+            if (ptBin == 1){
+               h_correlation_tau_RL_pi2_w1_def2->Fill(t_form_def2, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi2_wEEC_def2->Fill(t_form_def2, sig_dr_pairs, sig_E2C_pairs / (binWidth3 * ptCounts[1]));
+            }
+            if (ptBin == 2){
+               h_correlation_tau_RL_pi3_w1_def2->Fill(t_form_def2, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi3_wEEC_def2->Fill(t_form_def2, sig_dr_pairs, sig_E2C_pairs / (binWidth3 * ptCounts[2]));
+            }
+            if (ptBin == 3){
+               h_correlation_tau_RL_pi4_w1_def2->Fill(t_form_def2, sig_dr_pairs, 1);
+               h_correlation_tau_RL_pi4_wEEC_def2->Fill(t_form_def2, sig_dr_pairs, sig_E2C_pairs / (binWidth3 * ptCounts[3]));
+            }
+
+
+            double pTAvg = ptAverages[ptBin];
+
+
+            //Here we redo the EEC's but for the different R_L regimes
+            if (sig_dr_pairs < 0.7/pTAvg) {
+               val1++;
+               // EEC vs tau for tau_def 1
+               int binIndex2 = hE2C_sum_vs_tau_zcut1_pi1_R1->GetXaxis()->FindBin(t_form);
+               double binWidth2 = hE2C_sum_vs_tau_zcut1_pi1_R1->GetBinWidth(binIndex2);
+               if (ptBin == 0) {
+                  hE2C_sum_vs_tau_zcut1_pi1_R1->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[0]));
+                  }
+               if (ptBin == 1) {
+                  hE2C_sum_vs_tau_zcut1_pi2_R1->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[1]));
+                  }
+               if (ptBin == 2) {
+                  hE2C_sum_vs_tau_zcut1_pi3_R1->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[2]));
+                  }
+               if (ptBin == 3) {
+                  hE2C_sum_vs_tau_zcut1_pi4_R1->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[3]));
+                  }
+            
+               // EEC vs tau for tau_def 2
+               int binIndex3 = hE2C_sum_vs_tau_zcut1_pi1_def2_R1->GetXaxis()->FindBin(t_form_def2);
+               double binWidth3 = hE2C_sum_vs_tau_zcut1_pi1_def2_R1->GetBinWidth(binIndex3);
+               if (ptBin == 0) {
+                  hE2C_sum_vs_tau_zcut1_pi1_def2_R1->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[0]));
+                  }
+               if (ptBin == 1) {
+                  hE2C_sum_vs_tau_zcut1_pi2_def2_R1->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[1]));
+                  }
+               if (ptBin == 2) {
+                  hE2C_sum_vs_tau_zcut1_pi3_def2_R1->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[2]));
+                  } 
+               if (ptBin == 3) {
+                  hE2C_sum_vs_tau_zcut1_pi4_def2_R1->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[3]));
+                  }
+            }
+
+            if ( sig_dr_pairs > 0.7/pTAvg  && sig_dr_pairs < 12/pTAvg) {
+               val2++;
+               // EEC vs tau for tau_def 1
+               int binIndex2 = hE2C_sum_vs_tau_zcut1_pi1_R2->GetXaxis()->FindBin(t_form);
+               double binWidth2 = hE2C_sum_vs_tau_zcut1_pi1_R2->GetBinWidth(binIndex2);
+               if (ptBin == 0) {
+                  hE2C_sum_vs_tau_zcut1_pi1_R2->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[0]));
+                  }
+               if (ptBin == 1) {
+                  hE2C_sum_vs_tau_zcut1_pi2_R2->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[1]));
+                  }
+               if (ptBin == 2) {
+                  hE2C_sum_vs_tau_zcut1_pi3_R2->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[2]));
+                  }
+               if (ptBin == 3) {
+                  hE2C_sum_vs_tau_zcut1_pi4_R2->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[3]));
+                  }
+            
+               // EEC vs tau for tau_def 2
+               int binIndex3 = hE2C_sum_vs_tau_zcut1_pi1_def2_R2->GetXaxis()->FindBin(t_form_def2);
+               double binWidth3 = hE2C_sum_vs_tau_zcut1_pi1_def2_R2->GetBinWidth(binIndex3);
+               if (ptBin == 0) {
+                  hE2C_sum_vs_tau_zcut1_pi1_def2_R2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[0]));
+                  }
+               if (ptBin == 1) {
+                  hE2C_sum_vs_tau_zcut1_pi2_def2_R2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[1]));
+                  }
+               if (ptBin == 2) {
+                  hE2C_sum_vs_tau_zcut1_pi3_def2_R2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[2]));
+                  }
+               if (ptBin == 3) {
+                  hE2C_sum_vs_tau_zcut1_pi4_def2_R2->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[3]));
+                  }
+            }
+
+            if (sig_dr_pairs > 12/pTAvg && sig_dr_pairs < 0.4) {
+               val3++;
+               // EEC vs tau for tau_def 1
+               int binIndex2 = hE2C_sum_vs_tau_zcut1_pi1_R3->GetXaxis()->FindBin(t_form);
+               double binWidth2 = hE2C_sum_vs_tau_zcut1_pi1_R3->GetBinWidth(binIndex2);
+               if (ptBin == 0) {
+                  hE2C_sum_vs_tau_zcut1_pi1_R3->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[0]));
+                  }
+               if (ptBin == 1) {
+                  hE2C_sum_vs_tau_zcut1_pi2_R3->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[1]));
+                  }
+               if (ptBin == 2) {
+                  hE2C_sum_vs_tau_zcut1_pi3_R3->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[2]));
+                  }
+               if (ptBin == 3) {
+                  hE2C_sum_vs_tau_zcut1_pi4_R3->Fill(t_form, sig_E2C_pairs / (binWidth2 * ptCounts[3]));
+                  }
+            
+               // EEC vs tau for tau_def 2
+               int binIndex3 = hE2C_sum_vs_tau_zcut1_pi1_def2_R3->GetXaxis()->FindBin(t_form_def2);
+               double binWidth3 = hE2C_sum_vs_tau_zcut1_pi1_def2_R3->GetBinWidth(binIndex3);
+               if (ptBin == 0) {
+                  hE2C_sum_vs_tau_zcut1_pi1_def2_R3->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[0]));
+                  }
+               if (ptBin == 1) {
+                  hE2C_sum_vs_tau_zcut1_pi2_def2_R3->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[1]));
+                  }
+               if (ptBin == 2) {
+                  hE2C_sum_vs_tau_zcut1_pi3_def2_R3->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[2]));
+                  }
+               if (ptBin == 3) {
+                  hE2C_sum_vs_tau_zcut1_pi4_def2_R3->Fill(t_form_def2, sig_E2C_pairs / (binWidth3 * ptCounts[3]));
+                  }
+               }
          }
+      
+
+
+
+
+
+
+         
          /*
          Hadronloop(hE2C_sum_vs_dr12_scaled_zcut2, E2C_hadron_pairs_zcut2, dr_hadron_pairs_zcut2, ptAverages, ptBin, total_n_Jets);
          Hadronloop(hE2C_sum_vs_dr12_scaled_zcut3, E2C_hadron_pairs_zcut3, dr_hadron_pairs_zcut3, ptAverages, ptBin, total_n_Jets);
@@ -412,6 +861,13 @@ void jetTreeSig2::Loop()
             double split_Zcutz = sigjetRecurZcut1_z->at(i).at(j);
             double split_Zcutmpt = sigjetRecurZcut1_mpt->at(i).at(j);
 
+
+            double hbarc = 0.19732697;
+            double GeVtofm = 1./hbarc; //~5.068;
+
+            double t_form = 1 / (2* split_Zcutmpt *GeVtofm* split_Zcutz * (1-split_Zcutz) * (1-cos(split_Zcutdr12))); // t_form SILAS
+            double t_form_def2 = 1 / (2* split_Zcutjetpt *GeVtofm* split_Zcutz * (1-split_Zcutz) * (1-cos(split_Zcutdr12))); // t_form SILAS, def 2
+
             // Fill histograms for each split (substructure) inside the current jet
             hSplitZcut1Dr12->Fill(split_Zcutdr12);
             hSplitZcut1Erad->Fill(split_Zcuterad);
@@ -420,6 +876,9 @@ void jetTreeSig2::Loop()
             hSplitZcut1LogDr12->Fill(split_Zcutlogdr12);
             hSplitZcut1LogZTheta->Fill(split_Zcutlogztheta);
             hSplitZcut1Z->Fill(split_Zcutz);
+
+            hist_t_form->Fill(t_form);
+            hist_t_form_def2->Fill(t_form_def2);
             
             // 2D EC2 histograms of def 1 and 2
             hSplitZcut1logzdr_vs_1dr12->Fill(split_Zcutlogdr12, split_Zcutlogztheta);
@@ -433,22 +892,72 @@ void jetTreeSig2::Loop()
             if((split_Zcutmpt == 0) || (split_Zcutproduct == 0))continue;
             else{
             if (ptBin == 0) {
-            hSplitZcut1E2C_sum_vs_dr12pi1->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth*total_n_Jets));
-            hSplitZcut1E2C_sum_vs_dr12def2pi1->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth*total_n_Jets));
+            hSplitZcut1E2C_sum_vs_dr12pi1->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth * ptCounts[0]));
+            hSplitZcut1E2C_sum_vs_dr12def2pi1->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth * ptCounts[0]));
             }
             if (ptBin == 1) {
-            hSplitZcut1E2C_sum_vs_dr12pi2->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth*total_n_Jets));
-            hSplitZcut1E2C_sum_vs_dr12def2pi2->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth*total_n_Jets));
+            hSplitZcut1E2C_sum_vs_dr12pi2->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth * ptCounts[1]));
+            hSplitZcut1E2C_sum_vs_dr12def2pi2->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth * ptCounts[1]));
              }
             if (ptBin == 2) {
-            hSplitZcut1E2C_sum_vs_dr12pi3->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth*total_n_Jets));
-            hSplitZcut1E2C_sum_vs_dr12def2pi3->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth*total_n_Jets));
+            hSplitZcut1E2C_sum_vs_dr12pi3->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth * ptCounts[2]));
+            hSplitZcut1E2C_sum_vs_dr12def2pi3->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth * ptCounts[2]));
              }
             if (ptBin == 3) {
-            hSplitZcut1E2C_sum_vs_dr12pi4->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth*total_n_Jets));
-            hSplitZcut1E2C_sum_vs_dr12def2pi4->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth*total_n_Jets));
+            hSplitZcut1E2C_sum_vs_dr12pi4->Fill(split_Zcutdr12, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth* ptCounts[3]));
+            hSplitZcut1E2C_sum_vs_dr12def2pi4->Fill(split_Zcutdr12, split_Zcutproduct/(pow(sigPt, 2)*binWidth* ptCounts[3]));
              }
             }
+            
+           
+            int binIndex4 = hSplitZcut1E2C_sum_vs_taupi1->GetXaxis()->FindBin(t_form);
+            double binWidth4 = hSplitZcut1E2C_sum_vs_taupi1->GetBinWidth(binIndex4);
+            int binIndex5 = hSplitZcut1E2C_sum_vs_taupi1->GetXaxis()->FindBin(t_form_def2);
+            double binWidth5 = hSplitZcut1E2C_sum_vs_taupi1->GetBinWidth(binIndex5);
+            if((split_Zcutmpt == 0) || (split_Zcutproduct == 0))continue;
+            else{
+            if (ptBin == 0) {
+            hSplitZcut1E2C_sum_vs_taupi1->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth4 * ptCounts[0]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi1->Fill(t_form_def2, split_Zcutproduct/(pow(sigPt, 2)*binWidth5 * ptCounts[0]));
+            }
+            if (ptBin == 1) {
+            hSplitZcut1E2C_sum_vs_taupi2->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth4 * ptCounts[1]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi2->Fill(t_form_def2, split_Zcutproduct/(pow(sigPt, 2)*binWidth5 * ptCounts[1]));
+             }
+            if (ptBin == 2) {
+            hSplitZcut1E2C_sum_vs_taupi3->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth4 * ptCounts[2]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi3->Fill(t_form_def2, split_Zcutproduct/(pow(sigPt, 2)*binWidth5 * ptCounts[2]));
+             }
+            if (ptBin == 3) {
+            hSplitZcut1E2C_sum_vs_taupi4->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth4 * ptCounts[3]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi4->Fill(t_form_def2, split_Zcutproduct/(pow(sigPt, 2)*binWidth5 * ptCounts[3]));
+             }
+            }
+
+             /*
+            int binIndex2 = hSplitZcut1E2C_sum_vs_taupi1->GetXaxis()->FindBin(split_Zcutdr12);
+            double binWidth2 = hSplitZcut1E2C_sum_vs_taupi1->GetBinWidth(binIndex2);
+            if((split_Zcutmpt == 0) || (split_Zcutproduct == 0))continue;
+            else{
+            if (ptBin == 0) {
+            hSplitZcut1E2C_sum_vs_taupi1->Fill(t_form, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth2 * ptCounts[0]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi1->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth2 * ptCounts[0]));
+            }
+            if (ptBin == 1) {
+            hSplitZcut1E2C_sum_vs_taupi2->Fill(t_form, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth2 * ptCounts[1]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi2->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth2 * ptCounts[1]));
+             }
+            if (ptBin == 2) {
+            hSplitZcut1E2C_sum_vs_taupi3->Fill(t_form, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth2 * ptCounts[2]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi3->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth2 * ptCounts[2]));
+             }
+            if (ptBin == 3) {
+            hSplitZcut1E2C_sum_vs_taupi4->Fill(t_form, split_Zcutproduct/(pow(split_Zcutmpt, 2)*binWidth2 * ptCounts[3]));
+            hSplitZcut1E2C_sum_vs_tau_def2pi4->Fill(t_form, split_Zcutproduct/(pow(sigPt, 2)*binWidth2 * ptCounts[3]));
+             }
+            }
+            */
+
          }
 
          
@@ -561,15 +1070,106 @@ void jetTreeSig2::Loop()
    std::vector<double> binEdgeshScaled3 = ScaleBinEdges(binEdgesh, ptAverages[2]);
    std::vector<double> binEdgeshScaled4 = ScaleBinEdges(binEdgesh, ptAverages[3]);
 
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi1_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi1", "Scaled E2C per dr12; dr12; Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi2_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi2", "Scaled E2C per dr12; dr12; Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi3_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi3", "Scaled E2C per dr12; dr12; Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
-   TH1D *hE2C_sum_vs_dr12_zcut1_pi4_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi4", "Scaled E2C per dr12; dr12; Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi1_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi1", "Scaled E2C per dr12; <p_{T}^{ch jet}>R_{L} (#it{GeV/c}); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi2_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi2", "Scaled E2C per dr12; <p_{T}^{ch jet}>R_{L} (#it{GeV/c}); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi3_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi3", "Scaled E2C per dr12; <p_{T}^{ch jet}>R_{L} (#it{GeV/c}); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_dr12_zcut1_pi4_scaled = new TH1D("hE2C_sum_vs_dr12_scaledpi4", "Scaled E2C per dr12; <p_{T}^{ch jet}>R_{L} (#it{GeV/c}); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
 
    Scalex_axishistogram(hE2C_sum_vs_dr12_zcut1_pi1, hE2C_sum_vs_dr12_zcut1_pi1_scaled, ptAverages[0]);
    Scalex_axishistogram(hE2C_sum_vs_dr12_zcut1_pi2, hE2C_sum_vs_dr12_zcut1_pi2_scaled, ptAverages[1]);
    Scalex_axishistogram(hE2C_sum_vs_dr12_zcut1_pi3, hE2C_sum_vs_dr12_zcut1_pi3_scaled, ptAverages[2]);
    Scalex_axishistogram(hE2C_sum_vs_dr12_zcut1_pi4, hE2C_sum_vs_dr12_zcut1_pi4_scaled, ptAverages[3]);
+
+  // ^ but for SILAS
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_scaled = new TH1D("hE2C_sum_vs_tau_scaledpi1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_scaled = new TH1D("hE2C_sum_vs_tau_scaledpi2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_scaled = new TH1D("hE2C_sum_vs_tau_scaledpi3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_scaled = new TH1D("hE2C_sum_vs_tau_scaledpi4", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1, hE2C_sum_vs_tau_zcut1_pi1_scaled, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2, hE2C_sum_vs_tau_zcut1_pi2_scaled, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3, hE2C_sum_vs_tau_zcut1_pi3_scaled, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4, hE2C_sum_vs_tau_zcut1_pi4_scaled, ptAverages[3]);
+ 
+   // same as ^ but for definition 2
+   TH1D *hE2C_sum_vs_tau_zcut1_pi1_def2_scaled = new TH1D("hE2C_sum_vs_tau_def2_scaledpi1", "Scaled E2C per #tau_{f} for def 2; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi2_def2_scaled = new TH1D("hE2C_sum_vs_tau_def2_scaledpi2", "Scaled E2C per #tau_{f} for def 2; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi3_def2_scaled = new TH1D("hE2C_sum_vs_tau_def2_scaledpi3", "Scaled E2C per #tau_{f} for def 2; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_zcut1_pi4_def2_scaled = new TH1D("hE2C_sum_vs_tau_def2_scaledpi4", "Scaled E2C per #tau_{f} for def 2; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_def2, hE2C_sum_vs_tau_zcut1_pi1_def2_scaled, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_def2, hE2C_sum_vs_tau_zcut1_pi2_def2_scaled, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_def2, hE2C_sum_vs_tau_zcut1_pi3_def2_scaled, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_def2, hE2C_sum_vs_tau_zcut1_pi4_def2_scaled, ptAverages[3]);
+
+   //Same as ^, but for different R_L regimes
+   //For Regime R1
+   TH1D *hE2C_sum_vs_tau_pi1_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi1_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_pi2_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi2_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_pi3_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi3_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_pi4_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi4_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_R1, hE2C_sum_vs_tau_pi1_scaled_R1, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_R1, hE2C_sum_vs_tau_pi2_scaled_R1, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_R1, hE2C_sum_vs_tau_pi3_scaled_R1, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_R1, hE2C_sum_vs_tau_pi4_scaled_R1, ptAverages[3]);
+
+   TH1D *hE2C_sum_vs_tau_pi1_def2_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi1_def2_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_pi2_def2_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi2_def2_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_pi3_def2_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi3_def2_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_pi4_def2_scaled_R1 = new TH1D("hE2C_sum_vs_tau_scaledpi4_def2_R1", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_def2_R1, hE2C_sum_vs_tau_pi1_def2_scaled_R1, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_def2_R1, hE2C_sum_vs_tau_pi2_def2_scaled_R1, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_def2_R1, hE2C_sum_vs_tau_pi3_def2_scaled_R1, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_def2_R1, hE2C_sum_vs_tau_pi4_def2_scaled_R1, ptAverages[3]);
+
+   //For Regime R2
+   TH1D *hE2C_sum_vs_tau_pi1_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi1_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_pi2_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi2_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_pi3_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi3_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_pi4_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi4_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_R2, hE2C_sum_vs_tau_pi1_scaled_R2, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_R2, hE2C_sum_vs_tau_pi2_scaled_R2, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_R2, hE2C_sum_vs_tau_pi3_scaled_R2, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_R2, hE2C_sum_vs_tau_pi4_scaled_R2, ptAverages[3]);
+
+   TH1D *hE2C_sum_vs_tau_pi1_def2_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi1_def2_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_pi2_def2_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi2_def2_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_pi3_def2_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi3_def2_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_pi4_def2_scaled_R2 = new TH1D("hE2C_sum_vs_tau_scaledpi4_def2_R2", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_def2_R2, hE2C_sum_vs_tau_pi1_def2_scaled_R2, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_def2_R2, hE2C_sum_vs_tau_pi2_def2_scaled_R2, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_def2_R2, hE2C_sum_vs_tau_pi3_def2_scaled_R2, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_def2_R2, hE2C_sum_vs_tau_pi4_def2_scaled_R2, ptAverages[3]);
+
+
+   //For Regime R3
+   TH1D *hE2C_sum_vs_tau_pi1_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi1_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_pi2_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi2_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_pi3_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi3_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_pi4_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi4_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_R3, hE2C_sum_vs_tau_pi1_scaled_R3, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_R3, hE2C_sum_vs_tau_pi2_scaled_R3, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_R3, hE2C_sum_vs_tau_pi3_scaled_R3, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_R3, hE2C_sum_vs_tau_pi4_scaled_R3, ptAverages[3]);
+
+   TH1D *hE2C_sum_vs_tau_pi1_def2_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi1_def2_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled1.size() - 1, &binEdgeshScaled1[0]);
+   TH1D *hE2C_sum_vs_tau_pi2_def2_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi2_def2_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled2.size() - 1, &binEdgeshScaled2[0]);
+   TH1D *hE2C_sum_vs_tau_pi3_def2_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi3_def2_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled3.size() - 1, &binEdgeshScaled3[0]);
+   TH1D *hE2C_sum_vs_tau_pi4_def2_scaled_R3 = new TH1D("hE2C_sum_vs_tau_scaledpi4_def2_R3", "Scaled E2C per #tau_{f}; <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgeshScaled4.size() - 1, &binEdgeshScaled4[0]);
+
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi1_def2_R3, hE2C_sum_vs_tau_pi1_def2_scaled_R3, ptAverages[0]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi2_def2_R3, hE2C_sum_vs_tau_pi2_def2_scaled_R3, ptAverages[1]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi3_def2_R3, hE2C_sum_vs_tau_pi3_def2_scaled_R3, ptAverages[2]);
+   Scalex_axishistogram(hE2C_sum_vs_tau_zcut1_pi4_def2_R3, hE2C_sum_vs_tau_pi4_def2_scaled_R3, ptAverages[3]);
+
+  
+
+
 
   // Define scaled histograms with scaled bin edges
    // Scale bin edges for each ptAverage
@@ -649,7 +1249,25 @@ void jetTreeSig2::Loop()
    RatioHistogram(hSplitZcut2E2C_sum_vs_dr12pi3, hSplitE2C_sum_vs_dr12pi3, ratio_EEC_zcut02_pi3);
    RatioHistogram(hSplitZcut2E2C_sum_vs_dr12pi4, hSplitE2C_sum_vs_dr12pi4, ratio_EEC_zcut02_pi4);
 
+   //Same as ^ but for formation time tau
+   TH1D *hSplitZcut1E2C_sum_vs_taupi1_scaled = new TH1D("hSplitZcut1E2C_sum_vs_taupi1_scaled", "Summed E2C per #tau_{f} (Scaled, def1); <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled1.size() - 1, &binEdgesScaled1[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_taupi2_scaled = new TH1D("hSplitZcut1E2C_sum_vs_taupi2_scaled", "Summed E2C per #tau_{f} (Scaled, def1); <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled2.size() - 1, &binEdgesScaled2[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_taupi3_scaled = new TH1D("hSplitZcut1E2C_sum_vs_taupi3_scaled", "Summed E2C per #tau_{f} (Scaled, def1); <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled3.size() - 1, &binEdgesScaled3[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_taupi4_scaled = new TH1D("hSplitZcut1E2C_sum_vs_taupi4_scaled", "Summed E2C per #tau_{f} (Scaled, def1); <p_{T}^{ch jet}>#tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled4.size() - 1, &binEdgesScaled4[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi1_scaled = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi1_scaled", "Summed E2C per #tau_{f} (Scaled, def2); <p_{T}^{ch jet}> #tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled1.size() - 1, &binEdgesScaled1[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi2_scaled = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi2_scaled", "Summed E2C per #tau_{f} (Scaled, def2); <p_{T}^{ch jet}> #tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled2.size() - 1, &binEdgesScaled2[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi3_scaled = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi3_scaled", "Summed E2C per #tau_{f} (Scaled, def2); <p_{T}^{ch jet}> #tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled3.size() - 1, &binEdgesScaled3[0]);
+   TH1D *hSplitZcut1E2C_sum_vs_tau_def2pi4_scaled = new TH1D("hSplitZcut1E2C_sum_vs_tau_def2pi4_scaled", "Summed E2C per #tau_{f} (Scaled, def2); <p_{T}^{ch jet}> #tau_{f} (GeV/#it{c} fm); Summed E2C", binEdgesScaled4.size() - 1, &binEdgesScaled4[0]);
 
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_taupi1, hSplitZcut1E2C_sum_vs_taupi1_scaled, ptAverages[0]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_taupi2, hSplitZcut1E2C_sum_vs_taupi2_scaled, ptAverages[1]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_taupi3, hSplitZcut1E2C_sum_vs_taupi3_scaled, ptAverages[2]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_taupi4, hSplitZcut1E2C_sum_vs_taupi4_scaled, ptAverages[3]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_tau_def2pi1, hSplitZcut1E2C_sum_vs_tau_def2pi1_scaled, ptAverages[0]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_tau_def2pi2, hSplitZcut1E2C_sum_vs_tau_def2pi2_scaled, ptAverages[1]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_tau_def2pi3, hSplitZcut1E2C_sum_vs_tau_def2pi3_scaled, ptAverages[2]);
+   Scalex_axishistogram(hSplitZcut1E2C_sum_vs_tau_def2pi4, hSplitZcut1E2C_sum_vs_tau_def2pi4_scaled, ptAverages[3]);
+   
 
 
    TFile *fout;
@@ -682,6 +1300,7 @@ void jetTreeSig2::Loop()
    h2E2C_vs_dr12_SD03->Write();
    */
 
+   /*
    //Histograms for Counter (splits)
       //With Zcut
    hSplitZcut1Dr12->Write();
@@ -691,6 +1310,7 @@ void jetTreeSig2::Loop()
    hSplitZcut1LogDr12->Write();
    hSplitZcut1LogZTheta->Write();
    hSplitZcut1Z->Write();
+   hist_t_form->Write();
       //Without Zcut
    hSplitDr12->Write();
    hSplitErad->Write();
@@ -709,8 +1329,10 @@ void jetTreeSig2::Loop()
    hSplitZcut1logzdr_vs_1dr12->Write();
    hSplitZcut2logzdr_vs_1dr12->Write();
    hSplitlogzdr_vs_1dr12->Write();
+   */
 
       // 1D histograms: Normalised E2C for four pt intervals (with and without Zcut)
+      /*
    hSplitZcut1E2C_sum_vs_dr12pi1->Write();
    hSplitZcut1E2C_sum_vs_dr12pi2->Write();
    hSplitZcut1E2C_sum_vs_dr12pi3->Write();
@@ -773,8 +1395,37 @@ void jetTreeSig2::Loop()
    ratio_EEC_zcut02_pi2->Write();
    ratio_EEC_zcut02_pi3->Write();
    ratio_EEC_zcut02_pi4->Write();
+   */
 
+cout << "There are " << val1 << "entries in the small RL range" << endl;
+cout << "There are " << val2 << "entries in the mid RL range" << endl;
+cout << "There are " << val3 << "entries in the large RL range" << endl;
+
+   // For silas ^
+   hSplitZcut1E2C_sum_vs_taupi1->Write();
+   hSplitZcut1E2C_sum_vs_taupi2->Write();
+   hSplitZcut1E2C_sum_vs_taupi3->Write();
+   hSplitZcut1E2C_sum_vs_taupi4->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi1->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi2->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi3->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi4->Write();
+
+   // Samea as ^, but scaled
+   hSplitZcut1E2C_sum_vs_taupi1_scaled->Write();
+   hSplitZcut1E2C_sum_vs_taupi2_scaled->Write();
+   hSplitZcut1E2C_sum_vs_taupi3_scaled->Write();
+   hSplitZcut1E2C_sum_vs_taupi4_scaled->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi1_scaled->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi2_scaled->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi3_scaled->Write();
+   hSplitZcut1E2C_sum_vs_tau_def2pi4_scaled->Write();
+
+   hist_t_form->Write();
+   hist_t_form_def2->Write();
      
+
+   
    // Histograms for hadron pairs
    hE2C_hadron_pairs->Write(); // 2D E2C vs dr12
    hE2C_sum_vs_dr12_zcut1_pi1->Write(); // 1D normalised E2C
@@ -786,7 +1437,104 @@ void jetTreeSig2::Loop()
    hE2C_sum_vs_dr12_zcut1_pi2_scaled->Write(); 
    hE2C_sum_vs_dr12_zcut1_pi3_scaled->Write(); 
    hE2C_sum_vs_dr12_zcut1_pi4_scaled->Write(); 
+
+   // Histogram for Hadron Pairs- SILAS
+   //First 8 are scaled, second 8 arent last 2 are histograms of how many times it appears
+   hE2C_sum_vs_tau_zcut1_pi1_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi1_def2_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_def2_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_def2_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_def2_scaled->Write();
+   hE2C_sum_vs_tau_zcut1_pi1->Write();
+   hE2C_sum_vs_tau_zcut1_pi2->Write();
+   hE2C_sum_vs_tau_zcut1_pi3->Write();
+   hE2C_sum_vs_tau_zcut1_pi4->Write();
+   hE2C_sum_vs_tau_zcut1_pi1_def2->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_def2->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_def2->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_def2->Write();
+
+   hist_t_form_hadr->Write();
+   hist_t_form_hadr_def2->Write();
+   hist_dr_hadron->Write();
+
+   h_correlation_tau_RL_pi1_w1->Write();
+   h_correlation_tau_RL_pi2_w1->Write();
+   h_correlation_tau_RL_pi3_w1->Write();
+   h_correlation_tau_RL_pi4_w1->Write();
+   h_correlation_tau_RL_pi1_wEEC->Write();
+   h_correlation_tau_RL_pi2_wEEC->Write();
+   h_correlation_tau_RL_pi3_wEEC->Write();
+   h_correlation_tau_RL_pi4_wEEC->Write();
+
+   h_correlation_tau_RL_pi1_w1_def2->Write();
+   h_correlation_tau_RL_pi2_w1_def2->Write();
+   h_correlation_tau_RL_pi3_w1_def2->Write();
+   h_correlation_tau_RL_pi4_w1_def2->Write();
+   h_correlation_tau_RL_pi1_wEEC_def2->Write();
+   h_correlation_tau_RL_pi2_wEEC_def2->Write();
+   h_correlation_tau_RL_pi3_wEEC_def2->Write();
+   h_correlation_tau_RL_pi4_wEEC_def2->Write();
+
+   //Writes out the EECs per R_L
+   hE2C_sum_vs_tau_zcut1_pi1_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi1_def2_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_def2_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_def2_R1->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_def2_R1->Write();
+
+   hE2C_sum_vs_tau_zcut1_pi1_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi1_def2_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_def2_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_def2_R2->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_def2_R2->Write();
+
+   hE2C_sum_vs_tau_zcut1_pi1_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi1_def2_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi2_def2_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi3_def2_R3->Write();
+   hE2C_sum_vs_tau_zcut1_pi4_def2_R3->Write();
+
+   hE2C_sum_vs_tau_pi1_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi2_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi3_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi4_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi1_def2_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi2_def2_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi3_def2_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi4_def2_scaled_R1->Write();
+   hE2C_sum_vs_tau_pi1_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi2_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi3_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi4_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi1_def2_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi2_def2_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi3_def2_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi4_def2_scaled_R2->Write();
+   hE2C_sum_vs_tau_pi1_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi2_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi3_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi4_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi1_def2_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi2_def2_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi3_def2_scaled_R3->Write();
+   hE2C_sum_vs_tau_pi4_def2_scaled_R3->Write();
+
    
+
+
    Pt_averages->Write();
 
    /*
