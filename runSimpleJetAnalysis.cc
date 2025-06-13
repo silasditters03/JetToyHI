@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 
+
 #include "TFile.h"
 #include "TTree.h"
 
@@ -126,6 +127,9 @@ int main (int argc, char ** argv) {
   vector<vector<double>> all_zg_hadron_pairs;
   vector<vector<double>> all_dr_hadron_pairs;
   vector<vector<double>> all_E2C_hadron_pairs;
+  vector<vector<double>> all_mom_pt_hadron_pairs;
+  vector<vector<double>> all_jet_pt_hadron_pairs;
+
   // Loop over every Jet 
   for (PseudoJet jet : jetCollectionSig.getJet()) {
       // Get the constituents of the jet
@@ -136,6 +140,8 @@ int main (int argc, char ** argv) {
       vector<double> dr_hadron_pairs;
       vector<double> zg_hadron_pairs;
       vector<double> E2C_hadron_pairs;
+      vector<double> mom_pt_hadron_pairs;
+      vector<double> jet_pt_hadron_pairs;
 
       // Loop over all pairs of constituents (hadrons) (i, j)
       for (int i = 0; i < num_constituents; ++i) {
@@ -157,6 +163,13 @@ int main (int argc, char ** argv) {
                   // Calculate E2C of hadron pairs
                   double E2C = (part_i.pt() * part_j.pt()) / (pow(jet.pt(), 2));
                   E2C_hadron_pairs.push_back(E2C);
+
+                  // Calculate mother p_T
+                  double mpt = part_i.pt() + part_j.pt();
+                  mom_pt_hadron_pairs.push_back(mpt);
+
+                  // Add jet_pt to list
+                  jet_pt_hadron_pairs.push_back(jet.pt());
               }
           }
       }
@@ -165,12 +178,16 @@ int main (int argc, char ** argv) {
       all_zg_hadron_pairs.push_back(zg_hadron_pairs);
       all_dr_hadron_pairs.push_back(dr_hadron_pairs);
       all_E2C_hadron_pairs.push_back(E2C_hadron_pairs);
+      all_mom_pt_hadron_pairs.push_back(mom_pt_hadron_pairs);
+      all_jet_pt_hadron_pairs.push_back(jet_pt_hadron_pairs);
   }
 
     // Adding the vectors to the jet collection
     jetCollectionSig.addVector("zg_hadron_pairs", all_zg_hadron_pairs);
     jetCollectionSig.addVector("dr_hadron_pairs", all_dr_hadron_pairs);
     jetCollectionSig.addVector("E2C_hadron_pairs", all_E2C_hadron_pairs);
+    jetCollectionSig.addVector("mom_pt_hadron_pairs", all_mom_pt_hadron_pairs);
+    jetCollectionSig.addVector("jet_pt_hadron_pairs", all_jet_pt_hadron_pairs);
 
     
     //---------------------------------------------------------------------------
